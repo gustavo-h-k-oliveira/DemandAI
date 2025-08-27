@@ -1,0 +1,12 @@
+services:
+  backend:
+    build:
+      context: ./backend
+      target: prod
+    image: shatoll/backend:1.0.0
+
+  frontend:
+    build:
+      context: ./frontend
+      target: prod
+    image: shatoll/frontend:1.0.0
