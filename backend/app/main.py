@@ -34,6 +34,11 @@ def load_model_if_present():
     except Exception as e:
         print(f"Falha ao carregar modelo: {e}")
 
+# Endpoints
+@app.get("")
+def read_root():
+    return {"message": "Hello World"}
+
 @app.get("/health")
 def health():
     return {"status": "ok"}
@@ -59,3 +64,37 @@ def predict(req: PredictRequest):
         return PredictResponse(prediction=float(y[0]))
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Erro ao predizer: {e}")
+
+# ====== Auth endpoints (mock simples) ======
+@app.post("/auth/login")
+def login(email: str, password: str):
+    # Mock: sempre retorna sucesso
+    return {"access_token": "mock-token-123", "token_type": "bearer"}
+
+@app.post("/auth/register") 
+def register(email: str, password: str):
+    # Mock: sempre "cria" usuário
+    return {"id": 1, "email": email, "message": "Usuário criado"}
+
+@app.get("/auth/me")
+def me():
+    # Mock: usuário fixo
+    return {"id": 1, "email": "demo@example.com", "name": "Demo User"}
+
+# ====== Dashboard ======
+@app.get("/api/dashboard/summary")
+def dashboard_summary():
+    return {
+        "total_predictions": 0,
+        "last_prediction_at": None,
+        "user_email": "demo@example.com"
+    }
+
+# ====== Histórico ======
+@app.get("/api/predictions")
+def list_predictions():
+    return {"items": [], "total": 0}
+
+@app.get("/api/predictions/{prediction_id}")
+def get_prediction(prediction_id: int):
+    return {"id": prediction_id, "prediction": 0.0, "features": []}

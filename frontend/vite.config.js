@@ -5,8 +5,11 @@ export default defineConfig({
   plugins: [react()],
   server: {
     host: true, // 0.0.0.0 dentro do container
-    port: 5173
+    port: 5173,
     // Se preferir evitar CORS em dev, você pode proxyar:
-    // proxy: { "/api": "http://backend:8000" }
+    proxy: {
+      "/api": "http://backend:8000",
+      "/auth": "http://backend:8000"
+     }
   }
 });
