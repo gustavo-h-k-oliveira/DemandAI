@@ -30,12 +30,12 @@ export function Navigation() {
             <Link to="/history" className={linkClass("/history")}>
               Histórico
             </Link>
-            <Link to="/login" className={linkClass("/login")}>
-              Login
-            </Link>
-            <Link to="/register" className={linkClass("/register")}>
-              Cadastro
-            </Link>
+            {/* <Link to="/login" className={linkClass("/login")}> */}
+              {/* Login */}
+            {/* </Link> */}
+            {/* <Link to="/register" className={linkClass("/register")}> */}
+              {/* Cadastro */}
+            {/* </Link> */}
           </div>
         </div>
       </div>

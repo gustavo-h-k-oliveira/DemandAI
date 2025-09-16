@@ -2,6 +2,9 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { Navigation } from './components/Navigation';
 import Dashboard from './pages/Dashboard'; // Changed: removed destructuring
 import { Login } from './pages/Login';
+import { Prediction } from './pages/Prediction';
+import { History } from './pages/History';
+import { Register } from './pages/Register';
 
 export default function App() {
   return (
@@ -12,9 +15,9 @@ export default function App() {
           <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/login" element={<Login />} />
-            <Route path="/predict" element={<div>Predict Page - Coming Soon</div>} />
-            <Route path="/history" element={<div>History Page - Coming Soon</div>} />
-            <Route path="/register" element={<div>Register Page - Coming Soon</div>} />
+            <Route path="/predict" element={<Prediction />} />
+            <Route path="/history" element={<History />} />
+            <Route path="/register" element={<Register />} />
           </Routes>
         </main>
       </div>
