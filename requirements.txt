@@ -1,0 +1,8 @@
+# requirements.txt para DemandAI FastAPI
+fastapi
+uvicorn
+scikit-learn
+pandas
+numpy
+joblib
+pydantic
