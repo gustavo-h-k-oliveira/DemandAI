@@ -287,6 +287,9 @@ class BombomLassoModel:
     
     def save_model(self, filename='bombom_lasso_model.pkl'):
         """Save the trained model"""
+        import os
+        os.makedirs('models', exist_ok=True)
+        out_path = filename if filename.startswith('models/') else os.path.join('models', filename)
         model_data = {
             'model': self.model,
             'scaler': self.scaler,
@@ -296,8 +299,8 @@ class BombomLassoModel:
             'training_results': self.training_results,
             'product_name': self.product_name
         }
-        joblib.dump(model_data, filename)
-        print(f"\n✅ Model saved to: {filename}")
+        joblib.dump(model_data, out_path)
+        print(f"\n✅ Model saved to: {out_path}")
     
     @classmethod
     def load_model(cls, filename='bombom_lasso_model.pkl'):
@@ -362,7 +365,7 @@ def main():
     bombom_model.generate_report()
     
     # Save model
-    bombom_model.save_model('bombom_lasso_model.pkl')
+    bombom_model.save_model('models/bombom_lasso_model.pkl')
     
     print(f"\n{'='*80}")
     print("🎉 BOMBOM MORANGUETE LASSO MODEL TRAINING COMPLETED")
