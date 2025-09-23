@@ -281,7 +281,7 @@ class BombomLassoModel:
         predictions = self.model.predict(X_scaled)
         return np.maximum(predictions, 0)  # Ensure non-negative
     
-    def save_model(self, filename='bombom_lasso_model.pkl'):
+    def save_model(self, filename='models/bombom_lasso_model.pkl'):
         """Save the trained model"""
         model_data = {
             'model': self.model,
@@ -296,7 +296,7 @@ class BombomLassoModel:
         print(f"\n✅ Model saved to: {filename}")
     
     @classmethod
-    def load_model(cls, filename='bombom_lasso_model.pkl'):
+    def load_model(cls, filename='models/bombom_lasso_model.pkl'):
         """Load a trained model"""
         model_data = joblib.load(filename)
         
@@ -358,7 +358,7 @@ def main():
     bombom_model.generate_report()
     
     # Save model
-    bombom_model.save_model('bombom_lasso_model.pkl')
+    bombom_model.save_model('models/bombom_lasso_model.pkl')
     
     print(f"\n{'='*80}")
     print("🎉 BOMBOM MORANGUETE LASSO MODEL TRAINING COMPLETED")

@@ -68,19 +68,21 @@ class TopbelLassoModel:
         for lag in [1, 2, 3, 4, 6, 12]:
             topbel_data[f'quantity_lag{lag}'] = topbel_data['quantity'].shift(lag)
         
-        # 3. Rolling statistics (multiple windows)
+        # 3. Rolling statistics (multiple windows) - past-only (shifted)
+        past_q = topbel_data['quantity'].shift(1)
         for window in [3, 6, 9, 12]:
-            topbel_data[f'quantity_ma{window}'] = topbel_data['quantity'].rolling(window=window, min_periods=1).mean()
-            topbel_data[f'quantity_std{window}'] = topbel_data['quantity'].rolling(window=window, min_periods=1).std()
-            topbel_data[f'quantity_min{window}'] = topbel_data['quantity'].rolling(window=window, min_periods=1).min()
-            topbel_data[f'quantity_max{window}'] = topbel_data['quantity'].rolling(window=window, min_periods=1).max()
+            topbel_data[f'quantity_ma{window}'] = past_q.rolling(window=window, min_periods=1).mean()
+            topbel_data[f'quantity_std{window}'] = past_q.rolling(window=window, min_periods=1).std()
+            topbel_data[f'quantity_min{window}'] = past_q.rolling(window=window, min_periods=1).min()
+            topbel_data[f'quantity_max{window}'] = past_q.rolling(window=window, min_periods=1).max()
         
         # 4. Trend and growth features
         topbel_data['trend'] = np.arange(len(topbel_data))
         topbel_data['trend_squared'] = topbel_data['trend'] ** 2
         topbel_data['trend_cubed'] = topbel_data['trend'] ** 3
-        topbel_data['quantity_pct_change'] = topbel_data['quantity'].pct_change()
-        topbel_data['quantity_diff'] = topbel_data['quantity'].diff()
+        # Past-only growth/diff features (avoid using current observation)
+        topbel_data['quantity_pct_change'] = past_q.pct_change()
+        topbel_data['quantity_diff'] = past_q.diff()
         topbel_data['quantity_diff2'] = topbel_data['quantity_diff'].diff()
         
         # 5. Seasonal indicators (specific for dairy products)
@@ -112,7 +114,10 @@ class TopbelLassoModel:
         # 10. Year-over-year features (if sufficient data)
         if len(topbel_data) >= 24:
             topbel_data['quantity_yoy'] = topbel_data['quantity'].shift(12)
-            topbel_data['yoy_growth'] = (topbel_data['quantity'] - topbel_data['quantity_yoy']) / topbel_data['quantity_yoy'].replace(0, np.nan)
+            # Use previous month growth relative to its YoY baseline
+            prev_q = topbel_data['quantity'].shift(1)
+            prev_yoy = topbel_data['quantity'].shift(13)
+            topbel_data['yoy_growth'] = ((prev_q - prev_yoy) / prev_yoy.replace(0, np.nan))
             topbel_data['yoy_acceleration'] = topbel_data['yoy_growth'].diff()
         
         # 11. Cyclical features
@@ -160,35 +165,35 @@ class TopbelLassoModel:
         return topbel_data
     
     def perform_lasso_feature_selection(self, X, y):
-        """Perform feature selection using Lasso with cross-validation"""
+        """Perform feature selection using Lasso with cross-validation (no leakage)"""
         print("\n🎯 PERFORMING LASSO FEATURE SELECTION")
         print("="*50)
         
         # Test different alpha values (broader range for dairy products)
         alphas = np.logspace(-5, 3, 100)  # From 0.00001 to 1000
         
-        # Use LassoCV for automatic alpha selection
-        lasso_cv = LassoCV(
-            alphas=alphas,
-            cv=TimeSeriesSplit(n_splits=min(5, len(X)//10)),  # Adaptive CV splits
-            random_state=42,
-            max_iter=3000,
-            tol=1e-6
-        )
-        
-        # Scale features
-        X_scaled = self.scaler.fit_transform(X)
-        
-        # Fit LassoCV
-        print("Training LassoCV for optimal alpha selection...")
-        lasso_cv.fit(X_scaled, y)
-        
-        print(f"Optimal alpha: {lasso_cv.alpha_:.8f}")
-        print(f"CV Score (R²): {lasso_cv.score(X_scaled, y):.4f}")
-        print(f"CV MSE: {lasso_cv.mse_path_.mean(axis=1).min():.2f}")
+        # Use Pipeline to avoid leakage: scaler inside CV
+        from sklearn.pipeline import Pipeline
+        lasso_cv = Pipeline([
+            ('scaler', StandardScaler()),
+            ('model', LassoCV(
+                alphas=alphas,
+                cv=TimeSeriesSplit(n_splits=max(3, min(5, len(X)//10))),
+                random_state=42,
+                max_iter=3000,
+                tol=1e-6
+            ))
+        ])
+
+        print("Training LassoCV (with scaler in pipeline) for optimal alpha selection...")
+        lasso_cv.fit(X, y)
+
+        optimal_alpha = lasso_cv.named_steps['model'].alpha_
+        print(f"Optimal alpha: {optimal_alpha:.8f}")
+        # CV score from model on transformed data isn't directly accessible; skip detailed CV metrics here
         
         # Get feature coefficients
-        coefficients = lasso_cv.coef_
+        coefficients = lasso_cv.named_steps['model'].coef_
         
         # Identify selected features (non-zero coefficients)
         selected_mask = np.abs(coefficients) > 1e-8
@@ -224,9 +229,9 @@ class TopbelLassoModel:
         print(f"  Interaction features: {len(interaction_features)}")
         
         # Create final model with optimal alpha
-        self.model = Lasso(alpha=lasso_cv.alpha_, random_state=42, max_iter=3000, tol=1e-6)
+        self.model = Lasso(alpha=optimal_alpha, random_state=42, max_iter=3000, tol=1e-6)
         
-        return lasso_cv.alpha_
+        return optimal_alpha
     
     def train_final_model(self, df):
         """Train the final Lasso model with selected features"""
@@ -239,8 +244,9 @@ class TopbelLassoModel:
         # Perform feature selection
         optimal_alpha = self.perform_lasso_feature_selection(X, y)
         
-        # Train/test split (use last 25% for testing for dairy products)
-        split_idx = int(len(df) * 0.75)
+        # Train/test split: use last 12 months or 25% (whichever is larger) for testing
+        test_size = max(12, int(len(df) * 0.25))
+        split_idx = max(1, len(df) - test_size)
         
         X_train = X.iloc[:split_idx]
         X_test = X.iloc[split_idx:]
@@ -422,6 +428,9 @@ class TopbelLassoModel:
     
     def save_model(self, filename='topbel_lasso_model.pkl'):
         """Save the trained model"""
+        import os
+        os.makedirs('models', exist_ok=True)
+        out_path = filename if filename.startswith('models/') else os.path.join('models', filename)
         model_data = {
             'model': self.model,
             'scaler': self.scaler,
@@ -431,8 +440,8 @@ class TopbelLassoModel:
             'training_results': self.training_results,
             'product_name': self.product_name
         }
-        joblib.dump(model_data, filename)
-        print(f"\n✅ Model saved to: {filename}")
+        joblib.dump(model_data, out_path)
+        print(f"\n✅ Model saved to: {out_path}")
     
     @classmethod
     def load_model(cls, filename='topbel_lasso_model.pkl'):

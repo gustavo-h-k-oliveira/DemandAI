@@ -448,7 +448,7 @@ class TopbelRidgeModel:
         predictions = self.model.predict(X_scaled)
         return np.maximum(predictions, 0)  # Ensure non-negative
     
-    def save_model(self, filename='topbel_ridge_conservative_model.pkl'):
+    def save_model(self, filename='models/topbel_ridge_conservative_model.pkl'):
         """Save the trained model"""
         model_data = {
             'model': self.model,
@@ -463,7 +463,7 @@ class TopbelRidgeModel:
         print(f"\n✅ Ridge Conservative model saved to: {filename}")
     
     @classmethod
-    def load_model(cls, filename='topbel_ridge_conservative_model.pkl'):
+    def load_model(cls, filename='models/topbel_ridge_conservative_model.pkl'):
         """Load a trained model"""
         model_data = joblib.load(filename)
         
@@ -556,7 +556,7 @@ def main():
     topbel_model.generate_comprehensive_report()
     
     # Save model
-    topbel_model.save_model('topbel_ridge_conservative_model.pkl')
+    topbel_model.save_model('models/topbel_ridge_conservative_model.pkl')
     
     print(f"\n{'='*80}")
     print("🎉 TOPBEL RIDGE CONSERVATIVE MODEL TRAINING COMPLETED")

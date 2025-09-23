@@ -7,7 +7,7 @@ WORKDIR /app
 COPY requirements-ml.txt .
 RUN pip install -r requirements-ml.txt
 COPY . .
-VOLUME ["/models"]
+# Copie os artefatos de modelo para a imagem
+COPY models/ /models/
 EXPOSE 9000
-# Ajuste conforme seu servidor (FastAPI/Flask/etc.)
 CMD ["uvicorn", "ml.main:app", "--host", "0.0.0.0", "--port", "9000"]

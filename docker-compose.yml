@@ -30,12 +30,14 @@ services:
       BACKEND_PORT: ${BACKEND_PORT:-8000}
       FRONTEND_ORIGIN: ${FRONTEND_ORIGIN:-http://localhost:5173}
       MODEL_DIR: /models
+      HIST_DATA: /data/dataset_with_features.csv
     depends_on:
       db:
         condition: service_healthy
     volumes:
       - ./backend:/app
-      - ./models:/models
+      - ./ml-service/models:/models
+      - ./backend/dataset_with_features.csv:/data/dataset_with_features.csv:ro
     ports:
       - "${BACKEND_PORT:-8000}:8000"
 
