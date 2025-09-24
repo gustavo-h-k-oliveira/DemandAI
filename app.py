@@ -131,7 +131,6 @@ import joblib
 import numpy as np
 import pandas as pd
 from typing import List, Optional
-from typing import List, Optional
 import os
 
 # Carregar modelos treinados
