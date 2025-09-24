@@ -139,6 +139,12 @@ LASSO_MODEL_PATH = 'models/topbel_lasso_model.pkl'
 RIDGE_MODEL_PATH = 'models/topbel_ridge_conservative_model.pkl'
 BOMBOM_MODEL_PATH = 'models/bombom_lasso_model.pkl'
 
+# Modelos Random Forest
+RF_BOMBOM_MODEL_PATH = 'models/bombom_moranguete_rf_model.pkl'
+RF_TETA_BEL_MODEL_PATH = 'models/teta_bel_rf_model.pkl'
+RF_TOPBEL_LEITE_MODEL_PATH = 'models/topbel_leite_condensado_rf_model.pkl'
+RF_TOPBEL_TRADICIONAL_MODEL_PATH = 'models/topbel_tradicional_rf_model.pkl'
+
 
 app = FastAPI(title="DemandAI - Predição de Demanda")
 templates = Jinja2Templates(directory="templates")
@@ -179,7 +185,7 @@ class HistoryRecord(BaseModel):
     quantity: float
 
 class PredictionInput(BaseModel):
-    model_type: str  # 'topbel_lasso', 'topbel_ridge', 'bombom_lasso'
+    model_type: str  # 'topbel_lasso', 'topbel_ridge', 'bombom_lasso', 'rf_bombom', 'rf_teta_bel', 'rf_topbel_leite', 'rf_topbel_tradicional'
     # Parâmetros do mês alvo (opcional se history for fornecido)
     year: Optional[int] = None
     month: Optional[int] = None
@@ -189,10 +195,14 @@ class PredictionInput(BaseModel):
     history: Optional[List[HistoryRecord]] = Field(None, description="Histórico do produto; se ausente, usa dataset interno")
 
 def _product_name_from_model(model_type: str) -> str:
-    if model_type in ('topbel_lasso', 'topbel_ridge'):
+    if model_type in ('topbel_lasso', 'topbel_ridge', 'rf_topbel_leite'):
         return "TOPBEL LEITE CONDENSADO 50UN"
-    if model_type == 'bombom_lasso':
+    if model_type in ('bombom_lasso', 'rf_bombom'):
         return "BOMBOM MORANGUETE 13G 160UN"
+    if model_type == 'rf_teta_bel':
+        return "TETA BEL TRADICIONAL 50UN"
+    if model_type == 'rf_topbel_tradicional':
+        return "TOPBEL TRADICIONAL 50UN"
     raise HTTPException(status_code=400, detail="Modelo não suportado.")
 
 def build_history_from_dataset(model_type: str, year: int, month: int, campaign: int, seasonality: int) -> pd.DataFrame:
@@ -233,23 +243,96 @@ def build_history_from_dataset(model_type: str, year: int, month: int, campaign:
 @app.on_event("startup")
 def load_models():
     global lasso_model, ridge_model, bombom_model
+    global rf_bombom_model, rf_teta_bel_model, rf_topbel_leite_model, rf_topbel_tradicional_model
+    
+    # Modelos originais (Lasso/Ridge)
     lasso_model = joblib.load(LASSO_MODEL_PATH) if os.path.exists(LASSO_MODEL_PATH) else None
     ridge_model = joblib.load(RIDGE_MODEL_PATH) if os.path.exists(RIDGE_MODEL_PATH) else None
     bombom_model = joblib.load(BOMBOM_MODEL_PATH) if os.path.exists(BOMBOM_MODEL_PATH) else None
+    
+    # Modelos Random Forest
+    rf_bombom_model = joblib.load(RF_BOMBOM_MODEL_PATH) if os.path.exists(RF_BOMBOM_MODEL_PATH) else None
+    rf_teta_bel_model = joblib.load(RF_TETA_BEL_MODEL_PATH) if os.path.exists(RF_TETA_BEL_MODEL_PATH) else None
+    rf_topbel_leite_model = joblib.load(RF_TOPBEL_LEITE_MODEL_PATH) if os.path.exists(RF_TOPBEL_LEITE_MODEL_PATH) else None
+    rf_topbel_tradicional_model = joblib.load(RF_TOPBEL_TRADICIONAL_MODEL_PATH) if os.path.exists(RF_TOPBEL_TRADICIONAL_MODEL_PATH) else None
 
+
+# Função para preparar features para modelos Random Forest
+def prepare_rf_features(df_hist: pd.DataFrame, target_year: int, target_month: int, target_campaign: int, target_seasonality: int) -> pd.DataFrame:
+    """
+    Prepara features para modelos Random Forest a partir do histórico.
+    Os modelos RF esperam as mesmas 76 features que foram usadas no treinamento.
+    """
+    # Garantir que o histórico está ordenado
+    df_hist = df_hist.sort_values(['year', 'month']).reset_index(drop=True)
+    
+    # Criar linha para o mês alvo
+    target_row = {
+        'year': target_year,
+        'month': target_month,
+        'campaign': target_campaign,
+        'seasonality': target_seasonality,
+        'quantity': 0.0  # Será preenchida pela predição
+    }
+    
+    # Adicionar a linha alvo ao histórico
+    df_complete = pd.concat([df_hist, pd.DataFrame([target_row])], ignore_index=True).reset_index(drop=True)
+    
+    # Usar a função existente que já calcula todas as features necessárias
+    # Criamos um mock de model_data que contém as features dos modelos RF
+    mock_model_data = {
+        'feature_columns': [
+            'year', 'month', 'campaign', 'seasonality', 'quarter', 'month_sin', 'month_cos',
+            'quarter_sin', 'quarter_cos', 'quantity_lag1', 'quantity_lag2', 'quantity_lag3',
+            'quantity_lag4', 'quantity_lag6', 'quantity_lag12', 'quantity_ma3', 'quantity_std3',
+            'quantity_min3', 'quantity_max3', 'quantity_ma6', 'quantity_std6', 'quantity_min6',
+            'quantity_max6', 'quantity_ma9', 'quantity_std9', 'quantity_min9', 'quantity_max9',
+            'quantity_ma12', 'quantity_std12', 'quantity_min12', 'quantity_max12', 'quantity_ewm3',
+            'quantity_ewm6', 'quantity_ewm12', 'quantity_volatility3', 'quantity_volatility6',
+            'quantity_stability_3', 'quantity_stability_6', 'trend', 'trend_norm', 'trend_squared',
+            'trend_cubed', 'quantity_pct_change', 'quantity_pct_change_smooth', 'quantity_diff',
+            'quantity_diff2', 'is_high_season', 'is_low_season', 'is_holiday_season', 'is_summer',
+            'is_winter', 'quantity_yoy', 'yoy_diff', 'yoy_growth', 'campaign_season_interaction',
+            'campaign_season', 'campaign_month', 'seasonality_month', 'campaign_high_season',
+            'seasonality_summer', 'month_1', 'month_2', 'month_3', 'month_4', 'month_5',
+            'month_6', 'month_7', 'month_8', 'month_9', 'month_10', 'month_11', 'month_12',
+            'quarter_1', 'quarter_2', 'quarter_3', 'quarter_4'
+        ]
+    }
+    
+    # Calcular features usando a função existente
+    X = compute_features_from_history(df_complete, mock_model_data)
+    
+    return X
 
 # Novo endpoint que aceita histórico
 @app.post("/predict")
 def predict(input: PredictionInput):
     # Selecionar modelo
+    model_data = None
+    is_rf_model = False
+    
     if input.model_type == 'topbel_lasso':
         model_data = lasso_model
     elif input.model_type == 'topbel_ridge':
         model_data = ridge_model
     elif input.model_type == 'bombom_lasso':
         model_data = bombom_model
+    elif input.model_type == 'rf_bombom':
+        model_data = rf_bombom_model
+        is_rf_model = True
+    elif input.model_type == 'rf_teta_bel':
+        model_data = rf_teta_bel_model
+        is_rf_model = True
+    elif input.model_type == 'rf_topbel_leite':
+        model_data = rf_topbel_leite_model
+        is_rf_model = True
+    elif input.model_type == 'rf_topbel_tradicional':
+        model_data = rf_topbel_tradicional_model
+        is_rf_model = True
     else:
         raise HTTPException(status_code=400, detail="Modelo não suportado.")
+    
     if model_data is None:
         raise HTTPException(status_code=500, detail="Modelo não carregado.")
 
@@ -276,10 +359,23 @@ def predict(input: PredictionInput):
     if df_hist is None or len(df_hist) < 2:
         raise HTTPException(status_code=400, detail="Histórico insuficiente para calcular features compostas.")
 
-    # Calcular features compostas para o mês alvo
-    X = compute_features_from_history(df_hist, model_data)
-    X_scaled = model_data['scaler'].transform(X)
-    pred = model_data['model'].predict(X_scaled)
+    # Calcular features e fazer predição
+    if is_rf_model:
+        # Modelos Random Forest não precisam de scaling e usam estrutura diferente
+        X = prepare_rf_features(
+            df_hist[:-1] if len(df_hist) > 1 else df_hist,  # Histórico sem a linha alvo
+            int(input.year) if input.year else df_hist.iloc[-1]['year'],
+            int(input.month) if input.month else df_hist.iloc[-1]['month'],
+            int(input.campaign) if input.campaign else df_hist.iloc[-1]['campaign'],
+            int(input.seasonality) if input.seasonality else df_hist.iloc[-1]['seasonality']
+        )
+        pred = model_data.predict(X)
+    else:
+        # Modelos lineares (Lasso/Ridge) usam o fluxo original
+        X = compute_features_from_history(df_hist, model_data)
+        X_scaled = model_data['scaler'].transform(X)
+        pred = model_data['model'].predict(X_scaled)
+    
     pred = float(np.maximum(pred, 0)[0])
     return {"prediction": pred, "model": input.model_type}
 
@@ -287,14 +383,30 @@ def predict(input: PredictionInput):
 @app.post("/_debug/inspect")
 def debug_inspect(input: PredictionInput):
     # Reutiliza o fluxo de seleção de modelo e histórico
+    model_data = None
+    is_rf_model = False
+    
     if input.model_type == 'topbel_lasso':
         model_data = lasso_model
     elif input.model_type == 'topbel_ridge':
         model_data = ridge_model
     elif input.model_type == 'bombom_lasso':
         model_data = bombom_model
+    elif input.model_type == 'rf_bombom':
+        model_data = rf_bombom_model
+        is_rf_model = True
+    elif input.model_type == 'rf_teta_bel':
+        model_data = rf_teta_bel_model
+        is_rf_model = True
+    elif input.model_type == 'rf_topbel_leite':
+        model_data = rf_topbel_leite_model
+        is_rf_model = True
+    elif input.model_type == 'rf_topbel_tradicional':
+        model_data = rf_topbel_tradicional_model
+        is_rf_model = True
     else:
         raise HTTPException(status_code=400, detail="Modelo não suportado.")
+    
     if model_data is None:
         raise HTTPException(status_code=500, detail="Modelo não carregado.")
 
@@ -316,48 +428,86 @@ def debug_inspect(input: PredictionInput):
             int(input.campaign),
             int(input.seasonality)
         )
-    X = compute_features_from_history(df_hist, model_data)
+    
+    # Processar de acordo com o tipo de modelo
+    if is_rf_model:
+        # Para modelos Random Forest, usamos feature importance em vez de coeficientes lineares
+        X = prepare_rf_features(
+            df_hist[:-1] if len(df_hist) > 1 else df_hist,
+            int(input.year) if input.year else df_hist.iloc[-1]['year'],
+            int(input.month) if input.month else df_hist.iloc[-1]['month'],
+            int(input.campaign) if input.campaign else df_hist.iloc[-1]['campaign'],
+            int(input.seasonality) if input.seasonality else df_hist.iloc[-1]['seasonality']
+        )
+        
+        pred_raw = float(model_data.predict(X)[0])
+        feature_values = X.iloc[0].to_dict()
+        
+        # Para Random Forest, mostramos a importância das features em vez de contribuições lineares
+        feature_importance = getattr(model_data, 'feature_importances_', None)
+        top_important = []
+        if feature_importance is not None:
+            importance_pairs = list(zip(X.columns, feature_importance))
+            top_important = sorted(importance_pairs, key=lambda x: x[1], reverse=True)[:15]
+        
+        return {
+            "model": input.model_type,
+            "model_type": "RandomForest",
+            "target": df_hist.iloc[-1][['year','month','campaign','seasonality']].to_dict(),
+            "feature_values_preview": {k: feature_values[k] for k in list(feature_values)[:20]},
+            "prediction": pred_raw,
+            "prediction_after_clip": float(max(pred_raw, 0.0)),
+            "top_feature_importance": top_important,
+            "note": "Random Forest models use feature importance instead of linear coefficients"
+        }
+    else:
+        # Código original para modelos lineares
+        X = compute_features_from_history(df_hist, model_data)
 
-    # Alinhamento de colunas
-    expected = list(model_data['feature_columns'])
-    got = list(X.columns)
-    missing_cols = [c for c in expected if c not in got]
-    extra_cols = [c for c in got if c not in expected]
+        # Alinhamento de colunas
+        expected = list(model_data['feature_columns'])
+        got = list(X.columns)
+        missing_cols = [c for c in expected if c not in got]
+        extra_cols = [c for c in got if c not in expected]
 
-    # Escala e contribuições lineares
-    X_scaled = model_data['scaler'].transform(X)
-    coef = getattr(model_data['model'], 'coef_', None)
-    intercept = getattr(model_data['model'], 'intercept_', 0.0)
-    contribs = None
-    pred_raw = None
-    if coef is not None:
-        contribs = (coef * X_scaled[0]).tolist()
-        pred_raw = float(np.dot(coef, X_scaled[0]) + intercept)
+        # Escala e contribuições lineares
+        X_scaled = model_data['scaler'].transform(X)
+        coef = getattr(model_data['model'], 'coef_', None)
+        intercept = getattr(model_data['model'], 'intercept_', 0.0)
+        contribs = None
+        pred_raw = None
+        if coef is not None:
+            contribs = (coef * X_scaled[0]).tolist()
+            pred_raw = float(np.dot(coef, X_scaled[0]) + intercept)
 
-    feature_values = X.iloc[0].to_dict()
-    scaled_values = {expected[i]: float(X_scaled[0][i]) for i in range(len(expected))}
+        feature_values = X.iloc[0].to_dict()
+        scaled_values = {expected[i]: float(X_scaled[0][i]) for i in range(len(expected))}
 
-    # Top contribuições
-    top_pos = []
-    top_neg = []
-    if contribs is not None:
-        pairs = list(zip(expected, contribs))
-        top_pos = sorted([p for p in pairs if p[1] > 0], key=lambda x: x[1], reverse=True)[:10]
-        top_neg = sorted([p for p in pairs if p[1] < 0], key=lambda x: x[1])[:10]
+        # Top contribuições
+        top_pos = []
+        top_neg = []
+        if contribs is not None:
+            pairs = list(zip(expected, contribs))
+            top_pos = sorted([p for p in pairs if p[1] > 0], key=lambda x: x[1], reverse=True)[:10]
+            top_neg = sorted([p for p in pairs if p[1] < 0], key=lambda x: x[1])[:10]
 
-    return {
-        "model": input.model_type,
-        "target": df_hist.iloc[-1][['year','month','campaign','seasonality']].to_dict(),
-        "missing_columns": missing_cols,
-        "extra_columns": extra_cols,
-        "feature_values": feature_values,
-        "scaled_values_preview": {k: scaled_values[k] for k in list(scaled_values)[:20]},
-        "prediction_linear_raw": pred_raw,
-        "prediction_after_clip": None if pred_raw is None else float(max(pred_raw, 0.0)),
-        "top_positive_contribs": top_pos,
-        "top_negative_contribs": top_neg
-    }
+        return {
+            "model": input.model_type,
+            "model_type": "Linear",
+            "target": df_hist.iloc[-1][['year','month','campaign','seasonality']].to_dict(),
+            "missing_columns": missing_cols,
+            "extra_columns": extra_cols,
+            "feature_values": feature_values,
+            "scaled_values_preview": {k: scaled_values[k] for k in list(scaled_values)[:20]},
+            "prediction_linear_raw": pred_raw,
+            "prediction_after_clip": None if pred_raw is None else float(max(pred_raw, 0.0)),
+            "top_positive_contribs": top_pos,
+            "top_negative_contribs": top_neg
+        }
 
 @app.get("/")
 def root():
     return {"message": "DemandAI FastAPI está rodando! Use o endpoint /predict."}
+
+# Carregar todos os modelos na inicialização
+load_models()

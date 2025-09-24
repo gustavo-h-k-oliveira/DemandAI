@@ -19,9 +19,17 @@
         <form method="post">
             <label for="model_type">Modelo:</label>
             <select name="model_type" id="model_type" required>
-                <option value="topbel_lasso">Topbel Lasso</option>
-                <option value="topbel_ridge">Topbel Ridge</option>
-                <option value="bombom_lasso">Bombom Lasso</option>
+                <optgroup label="Modelos Lineares">
+                    <option value="topbel_lasso">Topbel Lasso</option>
+                    <option value="topbel_ridge">Topbel Ridge</option>
+                    <option value="bombom_lasso">Bombom Lasso</option>
+                </optgroup>
+                <optgroup label="Modelos Random Forest">
+                    <option value="rf_bombom">RF - Bombom Moranguete</option>
+                    <option value="rf_teta_bel">RF - Teta Bel Tradicional</option>
+                    <option value="rf_topbel_leite">RF - Topbel Leite Condensado</option>
+                    <option value="rf_topbel_tradicional">RF - Topbel Tradicional</option>
+                </optgroup>
             </select>
             <label for="year">Ano:</label>
             <input type="number" name="year" id="year" min="2021" max="2100" required>
