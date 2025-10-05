@@ -170,7 +170,15 @@ async def form_post(request: Request,
     )
     try:
         result = predict(input_data)
-        prediction = result["prediction"]
+        # Garantir que o valor exibido na página seja inteiro
+        raw_pred = result.get("prediction") if isinstance(result, dict) else result
+        if isinstance(raw_pred, (int, float)):
+            try:
+                prediction = int(round(raw_pred))
+            except Exception:
+                prediction = raw_pred
+        else:
+            prediction = raw_pred
     except Exception as e:
         prediction = f"Erro: {str(e)}"
     return templates.TemplateResponse("form.html", {"request": request, "result": prediction})
@@ -305,6 +313,28 @@ def prepare_rf_features(df_hist: pd.DataFrame, target_year: int, target_month: i
     
     return X
 
+
+# Helper: cap prediction based on historical maxima to avoid unrealistic extremes
+def cap_prediction(pred_value: float, df_hist: pd.DataFrame) -> float:
+    try:
+        # Exclude the last row if it's the target row with quantity=0
+        hist = df_hist.copy()
+        if len(hist) > 1:
+            hist_vals = hist.iloc[:-1]['quantity']
+        else:
+            hist_vals = hist['quantity']
+        max_hist = float(hist_vals.max()) if not hist_vals.empty else 0.0
+        # If no history, don't cap aggressively; keep original
+        if max_hist <= 0:
+            return float(pred_value)
+        # Allow some growth but limit extreme predictions (e.g., 1.5x historical max)
+        cap = max_hist * 1.5
+        # Never return negative
+        capped = float(min(max(pred_value, 0.0), cap))
+        return capped
+    except Exception:
+        return float(pred_value)
+
 # Novo endpoint que aceita histórico
 @app.post("/predict")
 def predict(input: PredictionInput):
@@ -377,7 +407,11 @@ def predict(input: PredictionInput):
         pred = model_data['model'].predict(X_scaled)
     
     pred = float(np.maximum(pred, 0)[0])
-    return {"prediction": pred, "model": input.model_type}
+    # Apply cap based on historical values to avoid unrealistic extremes
+    pred_capped = cap_prediction(pred, df_hist)
+    # Return integer prediction (rounded) and prediction_after_clip as integer
+    pred_int = int(round(pred_capped))
+    return {"prediction": pred_int, "prediction_after_clip": pred_int, "model": input.model_type}
 
 # Endpoint de debug: inspeciona features e contribuições do modelo linear
 @app.post("/_debug/inspect")
@@ -455,8 +489,10 @@ def debug_inspect(input: PredictionInput):
             "model_type": "RandomForest",
             "target": df_hist.iloc[-1][['year','month','campaign','seasonality']].to_dict(),
             "feature_values_preview": {k: feature_values[k] for k in list(feature_values)[:20]},
-            "prediction": pred_raw,
-            "prediction_after_clip": float(max(pred_raw, 0.0)),
+            # Return prediction as integer (rounded). If None, keep None.
+            "prediction": None if pred_raw is None else int(round(pred_raw)),
+            # Clip negative predictions to zero and return as integer
+            "prediction_after_clip": None if pred_raw is None else int(round(max(pred_raw, 0.0))),
             "top_feature_importance": top_important,
             "note": "Random Forest models use feature importance instead of linear coefficients"
         }
@@ -500,7 +536,9 @@ def debug_inspect(input: PredictionInput):
             "feature_values": feature_values,
             "scaled_values_preview": {k: scaled_values[k] for k in list(scaled_values)[:20]},
             "prediction_linear_raw": pred_raw,
-            "prediction_after_clip": None if pred_raw is None else float(max(pred_raw, 0.0)),
+            # Also provide a unified "prediction" key as integer for consistency
+            "prediction": None if pred_raw is None else int(round(pred_raw)),
+            "prediction_after_clip": None if pred_raw is None else int(round(max(pred_raw, 0.0))),
             "top_positive_contribs": top_pos,
             "top_negative_contribs": top_neg
         }

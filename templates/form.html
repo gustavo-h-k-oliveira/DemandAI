@@ -17,19 +17,12 @@
     <div class="container">
         <h2>Predição de Demanda</h2>
         <form method="post">
-            <label for="model_type">Modelo:</label>
+            <label for="model_type">Produto:</label>
             <select name="model_type" id="model_type" required>
-                <optgroup label="Modelos Lineares">
-                    <option value="topbel_lasso">Topbel Lasso</option>
-                    <option value="topbel_ridge">Topbel Ridge</option>
-                    <option value="bombom_lasso">Bombom Lasso</option>
-                </optgroup>
-                <optgroup label="Modelos Random Forest">
-                    <option value="rf_bombom">RF - Bombom Moranguete</option>
-                    <option value="rf_teta_bel">RF - Teta Bel Tradicional</option>
-                    <option value="rf_topbel_leite">RF - Topbel Leite Condensado</option>
-                    <option value="rf_topbel_tradicional">RF - Topbel Tradicional</option>
-                </optgroup>
+                <option value="rf_bombom">Bombom Moranguete</option>
+                <option value="rf_teta_bel">Teta Bel Tradicional</option>
+                <option value="rf_topbel_leite">Topbel Leite Condensado</option>
+                <option value="rf_topbel_tradicional">Topbel Tradicional</option>
             </select>
             <label for="year">Ano:</label>
             <input type="number" name="year" id="year" min="2021" max="2100" required>
@@ -43,7 +36,7 @@
         </form>
         {% if result is not none %}
             <div class="result">
-                <strong>Predição:</strong> {{ result }}
+                <strong>Predição:</strong> {{ result }} caixas
             </div>
         {% endif %}
     </div>
