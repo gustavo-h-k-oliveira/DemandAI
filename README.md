@@ -1,29 +1,64 @@
 # DemandAI
 
-Plataforma de predição de demanda com FastAPI e modelos scikit-learn.
+Plataforma de predição de demanda composta por uma API FastAPI (Python) e um frontend React com Vite/Tailwind.
 
-## Como rodar localmente (sem Docker)
+## Visão geral
 
-- Requisitos: Python 3.11+
-- Instalar dependências: `pip install -r requirements.txt`
-- Rodar a API: `uvicorn app:app --reload`
+- **Backend**: expõe endpoints de previsão, inspeção e formulário rápido (`src/app.py`).
+- **Frontend** (`frontend/`): interface em React/Vite para consumir o endpoint `/predict`.
+- **Modelos**: artefatos `.pkl` residentes em `models/`, com análises em `models/*_analysis.png`.
 
-## Como rodar com Docker
+## Backend
 
-- Build da imagem: `docker build -t demandai .`
-- Subir o container: `docker run -p 8000:8000 demandai`
-- Via Compose: `docker compose up --build`
+### Execução local (sem Docker)
 
-## Endpoints principais
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+uvicorn src.app:app --reload --host 0.0.0.0 --port 8000
+```
+
+A API ficará acessível em `http://localhost:8000`.
+
+### Docker
+
+```bash
+# Build manual
+docker build -t demandai .
+docker run -p 8000:8000 demandai
+
+# Ou via Compose (sobe apenas o backend por enquanto)
+docker compose up --build
+```
+
+> ⚠️ O arquivo `docker-compose.yml` atual só provisiona o backend FastAPI. Para subir o frontend pelo Compose, crie um novo serviço baseado em Node/Vite ou sirva o build estático em outro container.
+
+## Frontend
+
+Pré-requisitos: Node.js 18+ e npm.
+
+```bash
+cd frontend
+npm install
+
+# Desenvolvimento (Vite) em http://localhost:5173
+npm run dev
+
+# Build de produção em frontend/dist
+npm run build
+```
+
+Por padrão, o Vite proxy-a as requisições para `http://localhost:8000/predict`. Garanta que o backend esteja rodando antes de iniciar o frontend.
+
+## Endpoints principais da API
 
 - `GET /` — status básico
 - `GET /form` — formulário HTML simples para teste
 - `POST /predict` — previsão com `model_type`, `year`, `month`, `campaign`, `seasonality` e opcional `history`
 - `POST /_debug/inspect` — inspeção de features e contribuições do modelo
 
-Certifique-se de que os artefatos de modelo estejam em `models/` e que `dataset.csv` exista para o modo de histórico automático.
-
-## Arquivos necessários
+## Artefatos necessários
 
 - `data/dataset.csv`
 - `models/bombom_moranguete_rf_model.pkl`

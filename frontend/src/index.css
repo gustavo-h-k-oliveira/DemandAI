@@ -1,0 +1,141 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background-color: #f5f5f5;
+  color: #1f2933;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+.page {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 2.5rem 1.5rem 4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+header h1 {
+  font-size: clamp(2rem, 4vw, 3rem);
+  margin: 0;
+}
+
+header p {
+  margin: 0;
+  color: #52606d;
+}
+
+.panel {
+  background: white;
+  border-radius: 1rem;
+  padding: 1.5rem;
+  box-shadow: 0 20px 45px -24px rgba(15, 23, 42, 0.35);
+  display: grid;
+  gap: 1rem;
+}
+
+.panel label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  font-size: 0.95rem;
+  color: #334155;
+}
+
+.panel input,
+.panel select {
+  appearance: none;
+  font: inherit;
+  padding: 0.65rem 0.75rem;
+  border-radius: 0.75rem;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  background: rgba(248, 250, 252, 0.85);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.panel input:focus,
+.panel select:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
+  outline: none;
+}
+
+.panel button {
+  border: none;
+  border-radius: 999px;
+  padding: 0.75rem 1.5rem;
+  background: linear-gradient(135deg, #6366f1, #2563eb);
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.15s ease, filter 0.15s ease;
+}
+
+.panel button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  filter: brightness(1.05);
+}
+
+.panel button:disabled {
+  filter: grayscale(0.2) brightness(0.9);
+  cursor: progress;
+}
+
+.result {
+  gap: 0.75rem;
+}
+
+.result h2 {
+  margin: 0;
+  font-size: 1.25rem;
+}
+
+.result p {
+  margin: 0;
+}
+
+.result dl {
+  margin: 0;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.result dt {
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.result dd {
+  margin: 0;
+  color: #334155;
+  font-size: 1.1rem;
+}
+
+.error {
+  color: #dc2626;
+  font-weight: 600;
+}
+
+@media (max-width: 640px) {
+  .panel {
+    padding: 1.25rem;
+  }
+}
