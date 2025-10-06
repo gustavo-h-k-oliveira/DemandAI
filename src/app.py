@@ -131,7 +131,6 @@ import joblib
 import numpy as np
 import pandas as pd
 from typing import List, Optional
-from typing import List, Optional
 import os
 
 
@@ -141,9 +140,9 @@ MODELS_DIR = os.path.abspath(os.path.join(BASE_DIR, "../models"))
 DATA_DIR = os.path.abspath(os.path.join(BASE_DIR, "../data"))
 DATASET_PATH = os.path.join(DATA_DIR, "dataset.csv")
 
-LASSO_MODEL_PATH = os.path.join(MODELS_DIR, "topbel_lasso_model.pkl")
-RIDGE_MODEL_PATH = os.path.join(MODELS_DIR, "topbel_ridge_conservative_model.pkl")
-BOMBOM_MODEL_PATH = os.path.join(MODELS_DIR, "bombom_lasso_model.pkl")
+# LASSO_MODEL_PATH = os.path.join(MODELS_DIR, "topbel_lasso_model.pkl")
+# RIDGE_MODEL_PATH = os.path.join(MODELS_DIR, "topbel_ridge_conservative_model.pkl")
+# BOMBOM_MODEL_PATH = os.path.join(MODELS_DIR, "bombom_lasso_model.pkl")
 RF_BOMBOM_MODEL_PATH = os.path.join(MODELS_DIR, "bombom_moranguete_rf_model.pkl")
 RF_TETA_BEL_MODEL_PATH = os.path.join(MODELS_DIR, "teta_bel_rf_model.pkl")
 RF_TOPBEL_LEITE_MODEL_PATH = os.path.join(MODELS_DIR, "topbel_leite_condensado_rf_model.pkl")
@@ -260,9 +259,9 @@ def load_models():
     global rf_bombom_model, rf_teta_bel_model, rf_topbel_leite_model, rf_topbel_tradicional_model
     
     # Modelos originais (Lasso/Ridge)
-    lasso_model = joblib.load(LASSO_MODEL_PATH) if os.path.exists(LASSO_MODEL_PATH) else None
-    ridge_model = joblib.load(RIDGE_MODEL_PATH) if os.path.exists(RIDGE_MODEL_PATH) else None
-    bombom_model = joblib.load(BOMBOM_MODEL_PATH) if os.path.exists(BOMBOM_MODEL_PATH) else None
+    # lasso_model = joblib.load(LASSO_MODEL_PATH) if os.path.exists(LASSO_MODEL_PATH) else None
+    # ridge_model = joblib.load(RIDGE_MODEL_PATH) if os.path.exists(RIDGE_MODEL_PATH) else None
+    # bombom_model = joblib.load(BOMBOM_MODEL_PATH) if os.path.exists(BOMBOM_MODEL_PATH) else None
     
     # Modelos Random Forest
     rf_bombom_model = joblib.load(RF_BOMBOM_MODEL_PATH) if os.path.exists(RF_BOMBOM_MODEL_PATH) else None
@@ -426,13 +425,14 @@ def debug_inspect(input: PredictionInput):
     model_data = None
     is_rf_model = False
     
-    if input.model_type == 'topbel_lasso':
-        model_data = lasso_model
-    elif input.model_type == 'topbel_ridge':
-        model_data = ridge_model
-    elif input.model_type == 'bombom_lasso':
-        model_data = bombom_model
-    elif input.model_type == 'rf_bombom':
+    # if input.model_type == 'topbel_lasso':
+    #     model_data = lasso_model
+    # elif input.model_type == 'topbel_ridge':
+    #     model_data = ridge_model
+    # elif input.model_type == 'bombom_lasso':
+    #     model_data = bombom_model
+    
+    if input.model_type == 'rf_bombom':
         model_data = rf_bombom_model
         is_rf_model = True
     elif input.model_type == 'rf_teta_bel':
