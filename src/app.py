@@ -135,19 +135,19 @@ from typing import List, Optional
 import os
 
 # Carregar modelos treinados
-LASSO_MODEL_PATH = 'models/topbel_lasso_model.pkl'
-RIDGE_MODEL_PATH = 'models/topbel_ridge_conservative_model.pkl'
-BOMBOM_MODEL_PATH = 'models/bombom_lasso_model.pkl'
+LASSO_MODEL_PATH = '../models/topbel_lasso_model.pkl'
+RIDGE_MODEL_PATH = '../models/topbel_ridge_conservative_model.pkl'
+BOMBOM_MODEL_PATH = '../models/bombom_lasso_model.pkl'
 
 # Modelos Random Forest
-RF_BOMBOM_MODEL_PATH = 'models/bombom_moranguete_rf_model.pkl'
-RF_TETA_BEL_MODEL_PATH = 'models/teta_bel_rf_model.pkl'
-RF_TOPBEL_LEITE_MODEL_PATH = 'models/topbel_leite_condensado_rf_model.pkl'
-RF_TOPBEL_TRADICIONAL_MODEL_PATH = 'models/topbel_tradicional_rf_model.pkl'
+RF_BOMBOM_MODEL_PATH = '../models/bombom_moranguete_rf_model.pkl'
+RF_TETA_BEL_MODEL_PATH = '../models/teta_bel_rf_model.pkl'
+RF_TOPBEL_LEITE_MODEL_PATH = '../models/topbel_leite_condensado_rf_model.pkl'
+RF_TOPBEL_TRADICIONAL_MODEL_PATH = '../models/topbel_tradicional_rf_model.pkl'
 
 
 app = FastAPI(title="DemandAI - Predição de Demanda")
-templates = Jinja2Templates(directory="templates")
+templates = Jinja2Templates(directory="../templates")
 @app.get("/form", response_class=HTMLResponse)
 async def form_get(request: Request):
     return templates.TemplateResponse("form.html", {"request": request, "result": None})
@@ -215,7 +215,7 @@ def _product_name_from_model(model_type: str) -> str:
 
 def build_history_from_dataset(model_type: str, year: int, month: int, campaign: int, seasonality: int) -> pd.DataFrame:
     try:
-        df = pd.read_csv('dataset.csv', sep=',', encoding='latin1')
+        df = pd.read_csv('../data/dataset.csv', sep=',', encoding='latin1')
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erro ao ler dataset.csv: {e}")
     # Remover NaN e coluna PESOL, padronizar colunas
