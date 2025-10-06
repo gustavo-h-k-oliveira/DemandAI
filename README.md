@@ -22,3 +22,11 @@ Plataforma de predição de demanda com FastAPI e modelos scikit-learn.
 - `POST /_debug/inspect` — inspeção de features e contribuições do modelo
 
 Certifique-se de que os artefatos de modelo estejam em `models/` e que `dataset.csv` exista para o modo de histórico automático.
+
+## Arquivos necessários
+
+- `data/dataset.csv`
+- `models/bombom_moranguete_rf_model.pkl`
+- `models/teta_bel_rf_model.pkl`
+- `models/topbel_leite_condensado_rf_model.pkl`
+- `models/topbel_tradicional_rf_model.pkl`

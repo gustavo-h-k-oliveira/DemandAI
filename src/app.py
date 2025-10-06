@@ -134,20 +134,26 @@ from typing import List, Optional
 from typing import List, Optional
 import os
 
-# Carregar modelos treinados
-LASSO_MODEL_PATH = '../models/topbel_lasso_model.pkl'
-RIDGE_MODEL_PATH = '../models/topbel_ridge_conservative_model.pkl'
-BOMBOM_MODEL_PATH = '../models/bombom_lasso_model.pkl'
 
-# Modelos Random Forest
-RF_BOMBOM_MODEL_PATH = '../models/bombom_moranguete_rf_model.pkl'
-RF_TETA_BEL_MODEL_PATH = '../models/teta_bel_rf_model.pkl'
-RF_TOPBEL_LEITE_MODEL_PATH = '../models/topbel_leite_condensado_rf_model.pkl'
-RF_TOPBEL_TRADICIONAL_MODEL_PATH = '../models/topbel_tradicional_rf_model.pkl'
+# Carregar modelos treinados e dataset
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+MODELS_DIR = os.path.abspath(os.path.join(BASE_DIR, "../models"))
+DATA_DIR = os.path.abspath(os.path.join(BASE_DIR, "../data"))
+DATASET_PATH = os.path.join(DATA_DIR, "dataset.csv")
+
+LASSO_MODEL_PATH = os.path.join(MODELS_DIR, "topbel_lasso_model.pkl")
+RIDGE_MODEL_PATH = os.path.join(MODELS_DIR, "topbel_ridge_conservative_model.pkl")
+BOMBOM_MODEL_PATH = os.path.join(MODELS_DIR, "bombom_lasso_model.pkl")
+RF_BOMBOM_MODEL_PATH = os.path.join(MODELS_DIR, "bombom_moranguete_rf_model.pkl")
+RF_TETA_BEL_MODEL_PATH = os.path.join(MODELS_DIR, "teta_bel_rf_model.pkl")
+RF_TOPBEL_LEITE_MODEL_PATH = os.path.join(MODELS_DIR, "topbel_leite_condensado_rf_model.pkl")
+RF_TOPBEL_TRADICIONAL_MODEL_PATH = os.path.join(MODELS_DIR, "topbel_tradicional_rf_model.pkl")
 
 
 app = FastAPI(title="DemandAI - Predição de Demanda")
-templates = Jinja2Templates(directory="../templates")
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+TEMPLATES_DIR = os.path.abspath(os.path.join(BASE_DIR, "../templates"))
+templates = Jinja2Templates(directory=TEMPLATES_DIR)
 @app.get("/form", response_class=HTMLResponse)
 async def form_get(request: Request):
     return templates.TemplateResponse("form.html", {"request": request, "result": None})
@@ -215,7 +221,7 @@ def _product_name_from_model(model_type: str) -> str:
 
 def build_history_from_dataset(model_type: str, year: int, month: int, campaign: int, seasonality: int) -> pd.DataFrame:
     try:
-        df = pd.read_csv('../data/dataset.csv', sep=',', encoding='latin1')
+        df = pd.read_csv(DATASET_PATH, sep=',', encoding='latin1')
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erro ao ler dataset.csv: {e}")
     # Remover NaN e coluna PESOL, padronizar colunas
