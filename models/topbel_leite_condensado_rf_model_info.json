@@ -1,0 +1,410 @@
+{
+  "model_type": "RandomForestRegressor",
+  "product": "TOPBEL LEITE CONDENSADO 50UN",
+  "training_period": "2021-2023",
+  "test_period": "2024-2025",
+  "best_params": {
+    "max_depth": 10,
+    "min_samples_leaf": 1,
+    "min_samples_split": 5,
+    "n_estimators": 200,
+    "random_state": 42
+  },
+  "features": [
+    "year",
+    "month",
+    "campaign",
+    "seasonality",
+    "quarter",
+    "month_sin",
+    "month_cos",
+    "quarter_sin",
+    "quarter_cos",
+    "quantity_lag1",
+    "quantity_lag2",
+    "quantity_lag3",
+    "quantity_lag4",
+    "quantity_lag6",
+    "quantity_lag12",
+    "quantity_ma3",
+    "quantity_std3",
+    "quantity_min3",
+    "quantity_max3",
+    "quantity_ma6",
+    "quantity_std6",
+    "quantity_min6",
+    "quantity_max6",
+    "quantity_ma9",
+    "quantity_std9",
+    "quantity_min9",
+    "quantity_max9",
+    "quantity_ma12",
+    "quantity_std12",
+    "quantity_min12",
+    "quantity_max12",
+    "quantity_ewm3",
+    "quantity_ewm6",
+    "quantity_ewm12",
+    "quantity_volatility3",
+    "quantity_volatility6",
+    "quantity_stability_3",
+    "quantity_stability_6",
+    "trend",
+    "trend_norm",
+    "trend_squared",
+    "trend_cubed",
+    "quantity_pct_change",
+    "quantity_pct_change_smooth",
+    "quantity_diff",
+    "quantity_diff2",
+    "is_high_season",
+    "is_low_season",
+    "is_holiday_season",
+    "is_summer",
+    "is_winter",
+    "quantity_yoy",
+    "yoy_diff",
+    "yoy_growth",
+    "campaign_season_interaction",
+    "campaign_season",
+    "campaign_month",
+    "seasonality_month",
+    "campaign_high_season",
+    "seasonality_summer",
+    "month_1",
+    "month_2",
+    "month_3",
+    "month_4",
+    "month_5",
+    "month_6",
+    "month_7",
+    "month_8",
+    "month_9",
+    "month_10",
+    "month_11",
+    "month_12",
+    "quarter_1",
+    "quarter_2",
+    "quarter_3",
+    "quarter_4"
+  ],
+  "train_metrics": {
+    "mse": 165965.0760720434,
+    "rmse": 407.3881147898689,
+    "mae": 302.9995475060631,
+    "r2": 0.9543995830028391
+  },
+  "test_metrics": {
+    "mse": 430955.9778349808,
+    "rmse": 656.4723740074527,
+    "mae": 543.5344355882933,
+    "r2": 0.7499256577917892
+  },
+  "feature_importance": [
+    {
+      "feature": "quantity_max3",
+      "importance": 0.35843817856285715
+    },
+    {
+      "feature": "quantity_min3",
+      "importance": 0.18271340515853376
+    },
+    {
+      "feature": "quantity_ewm3",
+      "importance": 0.16575408557432655
+    },
+    {
+      "feature": "month_cos",
+      "importance": 0.04012053805192055
+    },
+    {
+      "feature": "quantity_lag1",
+      "importance": 0.03683663332793045
+    },
+    {
+      "feature": "quantity_ma3",
+      "importance": 0.027668593447230896
+    },
+    {
+      "feature": "quarter_cos",
+      "importance": 0.02062580350194346
+    },
+    {
+      "feature": "yoy_diff",
+      "importance": 0.013620684464603615
+    },
+    {
+      "feature": "quantity_volatility3",
+      "importance": 0.013078363559907597
+    },
+    {
+      "feature": "quantity_pct_change_smooth",
+      "importance": 0.011358348472689865
+    },
+    {
+      "feature": "is_summer",
+      "importance": 0.010467413642963611
+    },
+    {
+      "feature": "quantity_diff",
+      "importance": 0.00907239963082034
+    },
+    {
+      "feature": "quantity_pct_change",
+      "importance": 0.008439475119890273
+    },
+    {
+      "feature": "quantity_volatility6",
+      "importance": 0.006434138793634546
+    },
+    {
+      "feature": "quantity_std6",
+      "importance": 0.006228715214794087
+    },
+    {
+      "feature": "quantity_lag4",
+      "importance": 0.00611496901840904
+    },
+    {
+      "feature": "quantity_ewm6",
+      "importance": 0.005920930182214028
+    },
+    {
+      "feature": "quantity_std9",
+      "importance": 0.005583095270686593
+    },
+    {
+      "feature": "quantity_std3",
+      "importance": 0.005489765097200004
+    },
+    {
+      "feature": "quarter_sin",
+      "importance": 0.005431417283800582
+    },
+    {
+      "feature": "yoy_growth",
+      "importance": 0.00501167732906674
+    },
+    {
+      "feature": "quantity_yoy",
+      "importance": 0.004826653398551077
+    },
+    {
+      "feature": "quantity_max6",
+      "importance": 0.004480175846401666
+    },
+    {
+      "feature": "is_winter",
+      "importance": 0.004023945487137321
+    },
+    {
+      "feature": "quantity_max12",
+      "importance": 0.0036896305208261697
+    },
+    {
+      "feature": "quantity_stability_3",
+      "importance": 0.003623915909341293
+    },
+    {
+      "feature": "quantity_ma12",
+      "importance": 0.003282162272505531
+    },
+    {
+      "feature": "quantity_max9",
+      "importance": 0.003162374396157314
+    },
+    {
+      "feature": "quantity_stability_6",
+      "importance": 0.002595666475721949
+    },
+    {
+      "feature": "quantity_lag2",
+      "importance": 0.0023970439023665215
+    },
+    {
+      "feature": "quantity_min6",
+      "importance": 0.0023939023407978416
+    },
+    {
+      "feature": "quantity_std12",
+      "importance": 0.0023900048238577466
+    },
+    {
+      "feature": "quantity_lag12",
+      "importance": 0.001524639133060498
+    },
+    {
+      "feature": "quarter",
+      "importance": 0.0013883900241188922
+    },
+    {
+      "feature": "month_sin",
+      "importance": 0.0011888794090451653
+    },
+    {
+      "feature": "quarter_4",
+      "importance": 0.001130982145482177
+    },
+    {
+      "feature": "quantity_ewm12",
+      "importance": 0.001130342559084366
+    },
+    {
+      "feature": "quantity_lag3",
+      "importance": 0.0011157773258710665
+    },
+    {
+      "feature": "month",
+      "importance": 0.0011019977899961975
+    },
+    {
+      "feature": "quantity_diff2",
+      "importance": 0.001056902211145754
+    },
+    {
+      "feature": "trend_cubed",
+      "importance": 0.001032279322817637
+    },
+    {
+      "feature": "quantity_ma9",
+      "importance": 0.0009056822874916849
+    },
+    {
+      "feature": "trend_squared",
+      "importance": 0.0008930246915573245
+    },
+    {
+      "feature": "year",
+      "importance": 0.0008164951932116268
+    },
+    {
+      "feature": "quantity_min12",
+      "importance": 0.0007695030692229006
+    },
+    {
+      "feature": "quarter_2",
+      "importance": 0.0007581856446680781
+    },
+    {
+      "feature": "seasonality_month",
+      "importance": 0.0007537044108423676
+    },
+    {
+      "feature": "quantity_ma6",
+      "importance": 0.0007126861239712175
+    },
+    {
+      "feature": "trend",
+      "importance": 0.0006127169947346613
+    },
+    {
+      "feature": "month_11",
+      "importance": 0.0005979414800161175
+    },
+    {
+      "feature": "quantity_lag6",
+      "importance": 0.00040244304730031454
+    },
+    {
+      "feature": "trend_norm",
+      "importance": 0.00031218662707181895
+    },
+    {
+      "feature": "month_5",
+      "importance": 0.0002190307844796874
+    },
+    {
+      "feature": "quantity_min9",
+      "importance": 9.562179476172677e-05
+    },
+    {
+      "feature": "month_1",
+      "importance": 4.55747855043231e-05
+    },
+    {
+      "feature": "quarter_1",
+      "importance": 4.009416078780147e-05
+    },
+    {
+      "feature": "campaign_season",
+      "importance": 2.8097799473659846e-05
+    },
+    {
+      "feature": "month_10",
+      "importance": 2.612308861964792e-05
+    },
+    {
+      "feature": "month_9",
+      "importance": 1.8189293946596937e-05
+    },
+    {
+      "feature": "campaign_high_season",
+      "importance": 1.386464104092307e-05
+    },
+    {
+      "feature": "is_high_season",
+      "importance": 1.2550063882194812e-05
+    },
+    {
+      "feature": "month_4",
+      "importance": 1.1594673884940467e-05
+    },
+    {
+      "feature": "month_3",
+      "importance": 1.0393343820578084e-05
+    },
+    {
+      "feature": "seasonality",
+      "importance": 0.0
+    },
+    {
+      "feature": "campaign",
+      "importance": 0.0
+    },
+    {
+      "feature": "is_low_season",
+      "importance": 0.0
+    },
+    {
+      "feature": "campaign_season_interaction",
+      "importance": 0.0
+    },
+    {
+      "feature": "is_holiday_season",
+      "importance": 0.0
+    },
+    {
+      "feature": "seasonality_summer",
+      "importance": 0.0
+    },
+    {
+      "feature": "campaign_month",
+      "importance": 0.0
+    },
+    {
+      "feature": "month_6",
+      "importance": 0.0
+    },
+    {
+      "feature": "month_2",
+      "importance": 0.0
+    },
+    {
+      "feature": "month_8",
+      "importance": 0.0
+    },
+    {
+      "feature": "month_7",
+      "importance": 0.0
+    },
+    {
+      "feature": "month_12",
+      "importance": 0.0
+    },
+    {
+      "feature": "quarter_3",
+      "importance": 0.0
+    }
+  ],
+  "created_at": "2025-10-05T23:01:17.264014"
+}

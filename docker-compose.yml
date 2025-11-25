@@ -1,0 +1,11 @@
+version: "3.9"
+services:
+  web:
+    build: .
+    image: demandai:latest
+    container_name: demandai
+    ports:
+      - "8000:8000"
+    environment:
+      - PYTHONUNBUFFERED=1
+    restart: unless-stopped
