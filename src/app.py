@@ -126,18 +126,24 @@ def compute_features_from_history(df_hist: pd.DataFrame, model_data) -> pd.DataF
 from fastapi import FastAPI, HTTPException, Form, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 import joblib
 import numpy as np
 import pandas as pd
 from typing import List, Optional
 import os
+import csv
+from collections import deque
+from datetime import datetime
+from fastapi.responses import JSONResponse
 
 # Caminhos absolutos baseados no local deste arquivo (robusto para Docker e execução local)
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 MODELS_DIR = os.path.abspath(os.path.join(BASE_DIR, "../models"))
 DATA_DIR = os.path.abspath(os.path.join(BASE_DIR, "../data"))
 DATASET_PATH = os.path.join(DATA_DIR, "dataset.csv")
+PREDICTIONS_LOG_PATH = os.path.join(DATA_DIR, "predictions_log.csv")
 
 # Apenas modelos Random Forest ativos (modelos Lasso/Ridge comentados/indisponíveis)
 RF_BOMBOM_MODEL_PATH = os.path.join(MODELS_DIR, "bombom_moranguete_rf_model.pkl")
@@ -145,7 +151,11 @@ RF_TETA_BEL_MODEL_PATH = os.path.join(MODELS_DIR, "teta_bel_rf_model.pkl")
 RF_TOPBEL_LEITE_MODEL_PATH = os.path.join(MODELS_DIR, "topbel_leite_condensado_rf_model.pkl")
 RF_TOPBEL_TRADICIONAL_MODEL_PATH = os.path.join(MODELS_DIR, "topbel_tradicional_rf_model.pkl")
 
-app = FastAPI(title="DemandAI - Predição de Demanda")
+app = FastAPI(title="DemandAI")
+# Monta diretório /static para servir CSS/JS/imagens
+STATIC_DIR = os.path.abspath(os.path.join(BASE_DIR, "../static"))
+app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+
 TEMPLATES_DIR = os.path.abspath(os.path.join(BASE_DIR, "../templates"))
 templates = Jinja2Templates(directory=TEMPLATES_DIR)
 @app.get("/form", response_class=HTMLResponse)
@@ -247,6 +257,67 @@ def build_history_from_dataset(model_type: str, year: int, month: int, campaign:
     }
     df_hist = pd.concat([df_hist, pd.DataFrame([target_row])], ignore_index=True)
     return df_hist[['year','month','campaign','seasonality','quantity']]
+
+
+def _append_prediction_log(entry: dict) -> None:
+    """Append a prediction entry to CSV log (creates file with header if missing)."""
+    os.makedirs(DATA_DIR, exist_ok=True)
+    write_header = not os.path.exists(PREDICTIONS_LOG_PATH)
+    fieldnames = [
+        "timestamp",
+        "model_type",
+        "year",
+        "month",
+        "campaign",
+        "seasonality",
+        "prediction"
+    ]
+    try:
+        with open(PREDICTIONS_LOG_PATH, "a", newline="", encoding="utf-8") as f:
+            writer = csv.DictWriter(f, fieldnames=fieldnames)
+            if write_header:
+                writer.writeheader()
+            writer.writerow({k: entry.get(k) for k in fieldnames})
+    except Exception:
+        # Logging falhou não deve impedir resposta principal
+        pass
+
+
+def _read_recent_predictions(limit: int = 10) -> List[dict]:
+    """Return the last `limit` predictions from CSV log."""
+    if not os.path.exists(PREDICTIONS_LOG_PATH):
+        return []
+    try:
+        with open(PREDICTIONS_LOG_PATH, newline="", encoding="utf-8") as f:
+            reader = csv.DictReader(f)
+            buffer = deque(maxlen=limit)
+            for row in reader:
+                # converter tipos básicos quando possível
+                try:
+                    row['year'] = int(row.get('year', 0))
+                    row['month'] = int(row.get('month', 0))
+                    row['campaign'] = int(row.get('campaign', 0))
+                    row['seasonality'] = int(row.get('seasonality', 0))
+                    row['prediction'] = int(row.get('prediction', 0))
+                except Exception:
+                    pass
+                # map model_type code to human-readable product name when possible
+                try:
+                    row_product = _product_name_from_model(row.get('model_type', ''))
+                except Exception:
+                    row_product = row.get('model_type')
+                row['product'] = row_product
+                buffer.append(row)
+            return list(buffer)
+    except Exception:
+        return []
+
+
+@app.get("/predictions")
+def recent_predictions(limit: int = 10):
+    """Return recent user prediction logs."""
+    preds = _read_recent_predictions(limit)
+    return JSONResponse({"user_predictions": preds})
 
 @app.on_event("startup")
 def load_models():
@@ -407,11 +478,26 @@ def predict(input: PredictionInput):
         pred = model_data['model'].predict(X_scaled)
     
     pred = float(np.maximum(pred, 0)[0])
-    # Apply cap based on historical values to avoid unrealistic extremes
     pred_capped = cap_prediction(pred, df_hist)
-    # Return integer prediction (rounded) and prediction_after_clip as integer
     pred_int = int(round(pred_capped))
-    return {"prediction": pred_int, "prediction_after_clip": pred_int, "model": input.model_type}
+
+    log_entry = {
+        "timestamp": datetime.utcnow().isoformat(),
+        "model_type": input.model_type,
+        "year": input.year if input.year is not None else int(df_hist.iloc[-1]['year']),
+        "month": input.month if input.month is not None else int(df_hist.iloc[-1]['month']),
+        "campaign": input.campaign if input.campaign is not None else int(df_hist.iloc[-1]['campaign']),
+        "seasonality": input.seasonality if input.seasonality is not None else int(df_hist.iloc[-1]['seasonality']),
+        "prediction": pred_int
+    }
+    _append_prediction_log(log_entry)
+    user_predictions = _read_recent_predictions(limit=10)
+
+    return {
+        "prediction": pred_int,
+        "model_used": input.model_type,
+        "user_predictions": user_predictions
+    }
 
 # Endpoint de debug: inspeciona features e contribuições do modelo linear
 @app.post("/_debug/inspect")
