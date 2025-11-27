@@ -1,0 +1,15 @@
+/* Reset / base */
+body { font-family: Arial, sans-serif; background: #f7f7f7; margin: 0; min-height: 100vh; color: #1f2933; }
+.container { max-width: 500px; margin: 40px auto; background: #fff; padding: 30px; border-radius: 10px; box-shadow: 0 2px 8px #0001; }
+h2 { text-align: center; color: #2c3e50; }
+
+/* Form */
+label { display: block; margin-top: 15px; }
+input, select { width: 100%; padding: 8px; margin-top: 5px; border-radius: 4px; border: 1px solid #ccc; font: inherit; background: #fff; }
+button { margin-top: 20px; width: 100%; padding: 10px; background: #2c3e50; color: #fff; border: none; border-radius: 4px; font-size: 16px; cursor: pointer; }
+
+/* Result box */
+.result { margin-top: 25px; padding: 15px; background: #eafaf1; border: 1px solid #b2dfdb; border-radius: 5px; color: #00695c; text-align: center; font-size: 18px; }
+
+/* Templates-specific styles (form.html) */
+button { cursor: pointer; }
