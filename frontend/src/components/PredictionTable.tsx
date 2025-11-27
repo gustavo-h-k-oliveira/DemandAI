@@ -6,7 +6,16 @@ interface PredictionTableProps {
 }
 
 export default function PredictionTable({ preds }: PredictionTableProps) {
-  if (!preds || preds.length === 0) return null;
+  const empty = !preds || preds.length === 0;
+
+  if (empty) {
+    return (
+      <div className="history" aria-live="polite">
+        <h2>Últimas predições realizadas</h2>
+        <p className="error">Nenhuma predição disponível no momento.</p>
+      </div>
+    );
+  }
 
   return (
     <>

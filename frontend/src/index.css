@@ -77,6 +77,14 @@ body {
   transform: rotate(180deg);
 }
 
+h2 {
+  font-weight: 600;
+  margin: 0;
+  color: #303030;
+  font-size: 1.25rem;
+  text-align: center;
+}
+
 nav img {
   width: 6.25rem;
   flex-shrink: 0;
@@ -253,11 +261,6 @@ label {
   padding: 1rem;
 }
 
-.result h2 {
-  margin: 0;
-  font-size: 1.25rem;
-}
-
 .result p {
   margin: 0;
   color: #52606d;
@@ -267,6 +270,8 @@ label {
   margin: 0;
   display: flex;
   gap: 4rem;
+  text-align: center;
+  padding: 0 1.2rem;
 }
 
 .result dl div {
@@ -284,12 +289,13 @@ label {
 
 .result dd {
   margin: 0;
-  color: #1e293b;
+  color: #843613;
   font-weight: 600;
   font-size: 1.55rem;
 }
 
 .error {
+  text-align: center;
   color: #dc2626;
   font-weight: 600;
 }
@@ -308,12 +314,6 @@ label {
   flex-direction: column;
   gap: 1.5rem;
   overflow-x: auto;
-}
-
-.history h2 {
-  margin: 0;
-  font-size: 1.25rem;
-  text-align: center;
 }
 
 .history table {

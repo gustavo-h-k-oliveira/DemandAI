@@ -8,8 +8,8 @@ export interface PredictionPayload {
   model_type: ModelKey;
   year: number;
   month: number;
-  campaign: number;
-  seasonality: number;
+  campaign: number | null;
+  seasonality: number | null;
 }
 
 export interface HistoryPrediction {
@@ -37,4 +37,9 @@ export interface PredictionResponse {
   details?: string;
   history?: HistoryPrediction[];
   user_predictions?: UserPrediction[];
+  flag_source?: 'user' | 'predicted' | 'history';
+  applied_flags?: {
+    campaign: number;
+    seasonality: number;
+  };
 }

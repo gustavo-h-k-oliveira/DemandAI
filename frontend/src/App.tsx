@@ -19,9 +19,22 @@ function App(): JSX.Element {
   function handleChange(event: FormEvent<HTMLInputElement | HTMLSelectElement>) {
     const { name, value } = event.currentTarget;
 
+    if (name === 'model_type') {
+      setFormData((prev) => ({ ...prev, model_type: value as PredictionPayload['model_type'] }));
+      return;
+    }
+
+    if (name === 'campaign' || name === 'seasonality') {
+      setFormData((prev) => ({
+        ...prev,
+        [name]: value === '' ? null : Number(value)
+      }));
+      return;
+    }
+
     setFormData((prev) => ({
       ...prev,
-      [name]: name === 'model_type' ? value : Number(value)
+      [name]: Number(value)
     }));
   }
 

@@ -1,8 +1,7 @@
 import React, { FormEvent } from 'react';
 import { Brain } from 'phosphor-react';
-import RadioOptionGroup from './RadioOption';
 import type { PredictionPayload } from '../types';
-import { BINARY_RADIO_OPTIONS, MODEL_OPTIONS } from '../constants';
+import { MODEL_OPTIONS } from '../constants';
 
 interface PredictionFormProps {
   formData: PredictionPayload;
@@ -52,20 +51,30 @@ export default function PredictionForm({ formData, onInput, onSubmit, isLoading 
         </label>
       </div>
       <div className='input-div'>
-        <RadioOptionGroup
-          legend="Campanha"
-          name="campaign"
-          options={BINARY_RADIO_OPTIONS}
-          value={formData.campaign}
-          onInput={onInput}
-        />
-        <RadioOptionGroup
-          legend="Sazonalidade"
-          name="seasonality"
-          options={BINARY_RADIO_OPTIONS}
-          value={formData.seasonality}
-          onInput={onInput}
-        />
+        <label className='input-form'>
+          Campanha
+          <select
+            name="campaign"
+            value={formData.campaign ?? ''}
+            onInput={onInput}
+          >
+            <option value="">Automático (usar previsão)</option>
+            <option value="1">Sim</option>
+            <option value="0">Não</option>
+          </select>
+        </label>
+        <label className='input-form'>
+          Sazonalidade
+          <select
+            name="seasonality"
+            value={formData.seasonality ?? ''}
+            onInput={onInput}
+          >
+            <option value="">Automático (usar previsão)</option>
+            <option value="1">Sim</option>
+            <option value="0">Não</option>
+          </select>
+        </label>
       </div>
       <button type="submit" disabled={isLoading}>
         <Brain size={20} color='white' />

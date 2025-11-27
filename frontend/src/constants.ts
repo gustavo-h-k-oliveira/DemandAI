@@ -16,11 +16,6 @@ export const DEFAULT_PAYLOAD: PredictionPayload = {
   model_type: 'rf_bombom',
   year: new Date().getFullYear(),
   month: new Date().getMonth() + 1,
-  campaign: 0,
-  seasonality: 0
+  campaign: null,
+  seasonality: null
 };
-
-export const BINARY_RADIO_OPTIONS = [
-  { value: 1, label: 'Sim' },
-  { value: 0, label: 'Não' }
-];

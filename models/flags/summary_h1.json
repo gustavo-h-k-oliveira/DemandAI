@@ -1,0 +1,477 @@
+{
+  "config": {
+    "horizon": 1,
+    "train_end_year": 2023,
+    "min_train_rows": 24,
+    "min_test_rows": 6,
+    "use_cv": true,
+    "cv_splits": 5,
+    "n_estimators": 400,
+    "max_depth": null,
+    "max_features": "sqrt",
+    "random_state": 42,
+    "calibrate_proba": false,
+    "calibration_method": "sigmoid",
+    "calibration_cv": 3,
+    "tune_hyperparams": false,
+    "tuning_candidates": 4
+  },
+  "trained_models": [
+    {
+      "product": "BOMBOM MORANGUETE 13G 160UN",
+      "slug": "bombom_moranguete_13g_160un",
+      "trained": true,
+      "reason": null,
+      "train_rows": 55,
+      "test_rows": 0,
+      "metrics": {
+        "joint_accuracy": 0.8888888888888888,
+        "campaign": {
+          "precision": 0.8888888888888888,
+          "recall": 1.0,
+          "f1": 0.9375,
+          "roc_auc": 0.7857142857142857
+        },
+        "seasonality": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "roc_auc": 1.0
+        }
+      },
+      "model_path": "/workspaces/DemandAI/models/flags/bombom_moranguete_13g_160un/flag_classifier_h1.joblib",
+      "thresholds": {
+        "campaign": 0.5687500000000001,
+        "seasonality": 0.7562500000000001
+      },
+      "feature_importances": {
+        "campaign": [
+          {
+            "feature": "trend",
+            "importance": 0.0859325753878897
+          },
+          {
+            "feature": "trend_cubed",
+            "importance": 0.08342351687767131
+          },
+          {
+            "feature": "trend_norm",
+            "importance": 0.07845285659567852
+          },
+          {
+            "feature": "campaign_month",
+            "importance": 0.06382254893243006
+          },
+          {
+            "feature": "trend_squared",
+            "importance": 0.06193673198620665
+          },
+          {
+            "feature": "campaign",
+            "importance": 0.05593309756120656
+          },
+          {
+            "feature": "quantity_min9",
+            "importance": 0.04909934914385339
+          },
+          {
+            "feature": "quantity_min12",
+            "importance": 0.04049697517224385
+          },
+          {
+            "feature": "quantity_std12",
+            "importance": 0.03896703387830184
+          },
+          {
+            "feature": "campaign_lag_2",
+            "importance": 0.03308187134468633
+          }
+        ],
+        "seasonality": [
+          {
+            "feature": "month_cos",
+            "importance": 0.1172807869182288
+          },
+          {
+            "feature": "is_summer",
+            "importance": 0.08347210613626173
+          },
+          {
+            "feature": "quantity_pct_change_smooth",
+            "importance": 0.06279409749203373
+          },
+          {
+            "feature": "quarter_cos",
+            "importance": 0.059265280470022316
+          },
+          {
+            "feature": "quarter_3",
+            "importance": 0.059065497537660654
+          },
+          {
+            "feature": "quarter_sin",
+            "importance": 0.057358198397116006
+          },
+          {
+            "feature": "month",
+            "importance": 0.05396765904900655
+          },
+          {
+            "feature": "seasonality_month",
+            "importance": 0.02988007860723463
+          },
+          {
+            "feature": "quantity_pct_change",
+            "importance": 0.028638767463516394
+          },
+          {
+            "feature": "quantity_lag4",
+            "importance": 0.02765594448660111
+          }
+        ]
+      }
+    },
+    {
+      "product": "TETA BEL TRADICIONAL 50UN",
+      "slug": "teta_bel_tradicional_50un",
+      "trained": true,
+      "reason": null,
+      "train_rows": 55,
+      "test_rows": 0,
+      "metrics": {
+        "joint_accuracy": 0.8888888888888888,
+        "campaign": {
+          "precision": 0.8888888888888888,
+          "recall": 1.0,
+          "f1": 0.9375,
+          "roc_auc": 0.5
+        },
+        "seasonality": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "roc_auc": 1.0
+        }
+      },
+      "model_path": "/workspaces/DemandAI/models/flags/teta_bel_tradicional_50un/flag_classifier_h1.joblib",
+      "thresholds": {
+        "campaign": 0.60375,
+        "seasonality": 0.5525
+      },
+      "feature_importances": {
+        "campaign": [
+          {
+            "feature": "trend",
+            "importance": 0.10415468936333969
+          },
+          {
+            "feature": "trend_cubed",
+            "importance": 0.09613589189206799
+          },
+          {
+            "feature": "trend_norm",
+            "importance": 0.08653252910610826
+          },
+          {
+            "feature": "campaign_month",
+            "importance": 0.07970529137989417
+          },
+          {
+            "feature": "trend_squared",
+            "importance": 0.0717015024506413
+          },
+          {
+            "feature": "campaign",
+            "importance": 0.06633167237109153
+          },
+          {
+            "feature": "year",
+            "importance": 0.04328599902116612
+          },
+          {
+            "feature": "campaign_lag_2",
+            "importance": 0.037315939986815115
+          },
+          {
+            "feature": "quantity_max12",
+            "importance": 0.03334837414699523
+          },
+          {
+            "feature": "yoy_growth",
+            "importance": 0.03308364548183735
+          }
+        ],
+        "seasonality": [
+          {
+            "feature": "month_cos",
+            "importance": 0.10511912076912719
+          },
+          {
+            "feature": "is_summer",
+            "importance": 0.07849411310704071
+          },
+          {
+            "feature": "quarter_cos",
+            "importance": 0.060173807404710664
+          },
+          {
+            "feature": "quarter_sin",
+            "importance": 0.05558277043557724
+          },
+          {
+            "feature": "quarter_3",
+            "importance": 0.05081049207943327
+          },
+          {
+            "feature": "month",
+            "importance": 0.04297180116276017
+          },
+          {
+            "feature": "quantity_lag12",
+            "importance": 0.0335194507004443
+          },
+          {
+            "feature": "seasonality_month",
+            "importance": 0.029221860773710515
+          },
+          {
+            "feature": "quantity_yoy",
+            "importance": 0.026725105144954846
+          },
+          {
+            "feature": "quantity_lag6",
+            "importance": 0.026541163561997837
+          }
+        ]
+      }
+    },
+    {
+      "product": "TOPBEL LEITE CONDENSADO 50UN",
+      "slug": "topbel_leite_condensado_50un",
+      "trained": true,
+      "reason": null,
+      "train_rows": 55,
+      "test_rows": 0,
+      "metrics": {
+        "joint_accuracy": 0.2777777777777778,
+        "campaign": {
+          "precision": 0.8888888888888888,
+          "recall": 0.6666666666666666,
+          "f1": 0.6875,
+          "roc_auc": 0.42857142857142855
+        },
+        "seasonality": {
+          "precision": 1.0,
+          "recall": 0.3333333333333333,
+          "f1": 0.47619047619047616,
+          "roc_auc": 0.75
+        }
+      },
+      "model_path": "/workspaces/DemandAI/models/flags/topbel_leite_condensado_50un/flag_classifier_h1.joblib",
+      "thresholds": {
+        "campaign": 0.47,
+        "seasonality": 0.14500000000000002
+      },
+      "feature_importances": {
+        "campaign": [
+          {
+            "feature": "trend",
+            "importance": 0.10816620140893718
+          },
+          {
+            "feature": "trend_cubed",
+            "importance": 0.10394201873108871
+          },
+          {
+            "feature": "trend_norm",
+            "importance": 0.09338066378302176
+          },
+          {
+            "feature": "trend_squared",
+            "importance": 0.08276077277654106
+          },
+          {
+            "feature": "campaign_month",
+            "importance": 0.07797209695820112
+          },
+          {
+            "feature": "campaign",
+            "importance": 0.07107786848047092
+          },
+          {
+            "feature": "year",
+            "importance": 0.04758083791789436
+          },
+          {
+            "feature": "campaign_lag_2",
+            "importance": 0.04628778304662399
+          },
+          {
+            "feature": "campaign_lag_1",
+            "importance": 0.03662279435430992
+          },
+          {
+            "feature": "campaign_lag_3",
+            "importance": 0.034576710941985306
+          }
+        ],
+        "seasonality": [
+          {
+            "feature": "quantity_roll_median_3",
+            "importance": 0.06893581435601089
+          },
+          {
+            "feature": "month_cos",
+            "importance": 0.05777332283701728
+          },
+          {
+            "feature": "is_summer",
+            "importance": 0.050994135191780116
+          },
+          {
+            "feature": "quantity_lag1",
+            "importance": 0.04368847833376772
+          },
+          {
+            "feature": "quarter_sin",
+            "importance": 0.037062952672209416
+          },
+          {
+            "feature": "quantity_lag_1",
+            "importance": 0.03585603405515232
+          },
+          {
+            "feature": "seasonality_month",
+            "importance": 0.034581479898358386
+          },
+          {
+            "feature": "quarter_3",
+            "importance": 0.03370154397038478
+          },
+          {
+            "feature": "quantity_ewm3",
+            "importance": 0.03294583995684672
+          },
+          {
+            "feature": "quantity_roll_mean_3",
+            "importance": 0.03214291724943937
+          }
+        ]
+      }
+    },
+    {
+      "product": "TOPBEL TRADICIONAL 50UN",
+      "slug": "topbel_tradicional_50un",
+      "trained": true,
+      "reason": null,
+      "train_rows": 55,
+      "test_rows": 0,
+      "metrics": {
+        "joint_accuracy": 0.5,
+        "campaign": {
+          "precision": 0.875,
+          "recall": 0.5952380952380952,
+          "f1": 0.65,
+          "roc_auc": 0.75
+        },
+        "seasonality": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "roc_auc": 1.0
+        }
+      },
+      "model_path": "/workspaces/DemandAI/models/flags/topbel_tradicional_50un/flag_classifier_h1.joblib",
+      "thresholds": {
+        "campaign": 0.4225,
+        "seasonality": 0.65
+      },
+      "feature_importances": {
+        "campaign": [
+          {
+            "feature": "trend",
+            "importance": 0.1086321969444171
+          },
+          {
+            "feature": "trend_cubed",
+            "importance": 0.09543748912448959
+          },
+          {
+            "feature": "trend_norm",
+            "importance": 0.09213662730823133
+          },
+          {
+            "feature": "trend_squared",
+            "importance": 0.08021371068089671
+          },
+          {
+            "feature": "campaign_month",
+            "importance": 0.07769776412777012
+          },
+          {
+            "feature": "campaign",
+            "importance": 0.06905931291791739
+          },
+          {
+            "feature": "year",
+            "importance": 0.05048223503494423
+          },
+          {
+            "feature": "campaign_lag_2",
+            "importance": 0.04708699208108377
+          },
+          {
+            "feature": "campaign_lag_1",
+            "importance": 0.04008557724253783
+          },
+          {
+            "feature": "campaign_lag_3",
+            "importance": 0.03253333951014184
+          }
+        ],
+        "seasonality": [
+          {
+            "feature": "month_cos",
+            "importance": 0.11784014371713881
+          },
+          {
+            "feature": "is_summer",
+            "importance": 0.08339621501773582
+          },
+          {
+            "feature": "quarter_cos",
+            "importance": 0.0629433590377841
+          },
+          {
+            "feature": "quarter_3",
+            "importance": 0.06132280282637431
+          },
+          {
+            "feature": "quarter_sin",
+            "importance": 0.056345651365286985
+          },
+          {
+            "feature": "month",
+            "importance": 0.04518498064606311
+          },
+          {
+            "feature": "seasonality_month",
+            "importance": 0.030948444553866427
+          },
+          {
+            "feature": "quantity_ewm3",
+            "importance": 0.02467103668110803
+          },
+          {
+            "feature": "month_6",
+            "importance": 0.02337678844605946
+          },
+          {
+            "feature": "quantity_pct_change_smooth",
+            "importance": 0.022160815918688483
+          }
+        ]
+      }
+    }
+  ]
+}

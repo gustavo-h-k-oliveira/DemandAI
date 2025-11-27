@@ -1,0 +1,268 @@
+{
+  "product": "TOPBEL LEITE CONDENSADO 50UN",
+  "slug": "topbel_leite_condensado_50un",
+  "horizon": 1,
+  "train_end_year": 2023,
+  "train_rows": 55,
+  "test_rows": 0,
+  "feature_columns": [
+    "year",
+    "month",
+    "campaign",
+    "seasonality",
+    "quarter",
+    "month_sin",
+    "month_cos",
+    "quarter_sin",
+    "quarter_cos",
+    "quantity_lag1",
+    "quantity_lag2",
+    "quantity_lag3",
+    "quantity_lag4",
+    "quantity_lag6",
+    "quantity_lag12",
+    "quantity_ma3",
+    "quantity_std3",
+    "quantity_min3",
+    "quantity_max3",
+    "quantity_ma6",
+    "quantity_std6",
+    "quantity_min6",
+    "quantity_max6",
+    "quantity_ma9",
+    "quantity_std9",
+    "quantity_min9",
+    "quantity_max9",
+    "quantity_ma12",
+    "quantity_std12",
+    "quantity_min12",
+    "quantity_max12",
+    "quantity_ewm3",
+    "quantity_ewm6",
+    "quantity_ewm12",
+    "quantity_volatility3",
+    "quantity_volatility6",
+    "quantity_stability_3",
+    "quantity_stability_6",
+    "trend",
+    "trend_norm",
+    "trend_squared",
+    "trend_cubed",
+    "quantity_pct_change",
+    "quantity_pct_change_smooth",
+    "quantity_diff",
+    "quantity_diff2",
+    "is_high_season",
+    "is_low_season",
+    "is_holiday_season",
+    "is_summer",
+    "is_winter",
+    "quantity_yoy",
+    "yoy_diff",
+    "yoy_growth",
+    "campaign_season_interaction",
+    "campaign_season",
+    "campaign_month",
+    "seasonality_month",
+    "campaign_high_season",
+    "seasonality_summer",
+    "month_1",
+    "month_2",
+    "month_3",
+    "month_4",
+    "month_5",
+    "month_6",
+    "month_7",
+    "month_8",
+    "month_9",
+    "month_10",
+    "month_11",
+    "month_12",
+    "quarter_1",
+    "quarter_2",
+    "quarter_3",
+    "quarter_4",
+    "quantity_lag_1",
+    "quantity_lag_2",
+    "quantity_lag_3",
+    "campaign_lag_1",
+    "campaign_lag_2",
+    "campaign_lag_3",
+    "seasonality_lag_1",
+    "seasonality_lag_2",
+    "seasonality_lag_3",
+    "quantity_roll_mean_3",
+    "quantity_roll_std_3",
+    "quantity_roll_median_3",
+    "quantity_roll_mean_6",
+    "quantity_roll_std_6",
+    "quantity_roll_median_6",
+    "quantity_roll_mean_12",
+    "quantity_roll_std_12",
+    "quantity_roll_median_12"
+  ],
+  "metrics": {
+    "joint_accuracy": 0.2777777777777778,
+    "campaign": {
+      "precision": 0.8888888888888888,
+      "recall": 0.6666666666666666,
+      "f1": 0.6875,
+      "roc_auc": 0.42857142857142855
+    },
+    "seasonality": {
+      "precision": 1.0,
+      "recall": 0.3333333333333333,
+      "f1": 0.47619047619047616,
+      "roc_auc": 0.75
+    }
+  },
+  "evaluation_mode": "cv",
+  "cv_splits": 5,
+  "cv_folds": [
+    {
+      "fold": 3,
+      "train_rows": 37,
+      "val_rows": 9,
+      "metrics": {
+        "campaign": {
+          "precision": 1.0,
+          "recall": 0.3333333333333333,
+          "f1": 0.5,
+          "roc_auc": null
+        },
+        "seasonality": {
+          "precision": 1.0,
+          "recall": 0.5,
+          "f1": 0.6666666666666666,
+          "roc_auc": 1.0
+        },
+        "joint_accuracy": 0.3333333333333333
+      },
+      "thresholds": {
+        "campaign": 0.35,
+        "seasonality": 0.2625
+      }
+    },
+    {
+      "fold": 4,
+      "train_rows": 46,
+      "val_rows": 9,
+      "metrics": {
+        "campaign": {
+          "precision": 0.7777777777777778,
+          "recall": 1.0,
+          "f1": 0.875,
+          "roc_auc": 0.42857142857142855
+        },
+        "seasonality": {
+          "precision": 1.0,
+          "recall": 0.16666666666666666,
+          "f1": 0.2857142857142857,
+          "roc_auc": 0.5
+        },
+        "joint_accuracy": 0.2222222222222222
+      },
+      "thresholds": {
+        "campaign": 0.59,
+        "seasonality": 0.0275
+      }
+    }
+  ],
+  "thresholds": {
+    "campaign": 0.47,
+    "seasonality": 0.14500000000000002
+  },
+  "feature_importances": {
+    "campaign": [
+      {
+        "feature": "trend",
+        "importance": 0.10816620140893718
+      },
+      {
+        "feature": "trend_cubed",
+        "importance": 0.10394201873108871
+      },
+      {
+        "feature": "trend_norm",
+        "importance": 0.09338066378302176
+      },
+      {
+        "feature": "trend_squared",
+        "importance": 0.08276077277654106
+      },
+      {
+        "feature": "campaign_month",
+        "importance": 0.07797209695820112
+      },
+      {
+        "feature": "campaign",
+        "importance": 0.07107786848047092
+      },
+      {
+        "feature": "year",
+        "importance": 0.04758083791789436
+      },
+      {
+        "feature": "campaign_lag_2",
+        "importance": 0.04628778304662399
+      },
+      {
+        "feature": "campaign_lag_1",
+        "importance": 0.03662279435430992
+      },
+      {
+        "feature": "campaign_lag_3",
+        "importance": 0.034576710941985306
+      }
+    ],
+    "seasonality": [
+      {
+        "feature": "quantity_roll_median_3",
+        "importance": 0.06893581435601089
+      },
+      {
+        "feature": "month_cos",
+        "importance": 0.05777332283701728
+      },
+      {
+        "feature": "is_summer",
+        "importance": 0.050994135191780116
+      },
+      {
+        "feature": "quantity_lag1",
+        "importance": 0.04368847833376772
+      },
+      {
+        "feature": "quarter_sin",
+        "importance": 0.037062952672209416
+      },
+      {
+        "feature": "quantity_lag_1",
+        "importance": 0.03585603405515232
+      },
+      {
+        "feature": "seasonality_month",
+        "importance": 0.034581479898358386
+      },
+      {
+        "feature": "quarter_3",
+        "importance": 0.03370154397038478
+      },
+      {
+        "feature": "quantity_ewm3",
+        "importance": 0.03294583995684672
+      },
+      {
+        "feature": "quantity_roll_mean_3",
+        "importance": 0.03214291724943937
+      }
+    ]
+  },
+  "hyperparameters": {
+    "n_estimators": 400,
+    "max_depth": null,
+    "max_features": "sqrt",
+    "calibrate_proba": false
+  },
+  "model_path": "/workspaces/DemandAI/models/flags/topbel_leite_condensado_50un/flag_classifier_h1.joblib"
+}

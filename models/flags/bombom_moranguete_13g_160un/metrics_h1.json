@@ -1,0 +1,268 @@
+{
+  "product": "BOMBOM MORANGUETE 13G 160UN",
+  "slug": "bombom_moranguete_13g_160un",
+  "horizon": 1,
+  "train_end_year": 2023,
+  "train_rows": 55,
+  "test_rows": 0,
+  "feature_columns": [
+    "year",
+    "month",
+    "campaign",
+    "seasonality",
+    "quarter",
+    "month_sin",
+    "month_cos",
+    "quarter_sin",
+    "quarter_cos",
+    "quantity_lag1",
+    "quantity_lag2",
+    "quantity_lag3",
+    "quantity_lag4",
+    "quantity_lag6",
+    "quantity_lag12",
+    "quantity_ma3",
+    "quantity_std3",
+    "quantity_min3",
+    "quantity_max3",
+    "quantity_ma6",
+    "quantity_std6",
+    "quantity_min6",
+    "quantity_max6",
+    "quantity_ma9",
+    "quantity_std9",
+    "quantity_min9",
+    "quantity_max9",
+    "quantity_ma12",
+    "quantity_std12",
+    "quantity_min12",
+    "quantity_max12",
+    "quantity_ewm3",
+    "quantity_ewm6",
+    "quantity_ewm12",
+    "quantity_volatility3",
+    "quantity_volatility6",
+    "quantity_stability_3",
+    "quantity_stability_6",
+    "trend",
+    "trend_norm",
+    "trend_squared",
+    "trend_cubed",
+    "quantity_pct_change",
+    "quantity_pct_change_smooth",
+    "quantity_diff",
+    "quantity_diff2",
+    "is_high_season",
+    "is_low_season",
+    "is_holiday_season",
+    "is_summer",
+    "is_winter",
+    "quantity_yoy",
+    "yoy_diff",
+    "yoy_growth",
+    "campaign_season_interaction",
+    "campaign_season",
+    "campaign_month",
+    "seasonality_month",
+    "campaign_high_season",
+    "seasonality_summer",
+    "month_1",
+    "month_2",
+    "month_3",
+    "month_4",
+    "month_5",
+    "month_6",
+    "month_7",
+    "month_8",
+    "month_9",
+    "month_10",
+    "month_11",
+    "month_12",
+    "quarter_1",
+    "quarter_2",
+    "quarter_3",
+    "quarter_4",
+    "quantity_lag_1",
+    "quantity_lag_2",
+    "quantity_lag_3",
+    "campaign_lag_1",
+    "campaign_lag_2",
+    "campaign_lag_3",
+    "seasonality_lag_1",
+    "seasonality_lag_2",
+    "seasonality_lag_3",
+    "quantity_roll_mean_3",
+    "quantity_roll_std_3",
+    "quantity_roll_median_3",
+    "quantity_roll_mean_6",
+    "quantity_roll_std_6",
+    "quantity_roll_median_6",
+    "quantity_roll_mean_12",
+    "quantity_roll_std_12",
+    "quantity_roll_median_12"
+  ],
+  "metrics": {
+    "joint_accuracy": 0.8888888888888888,
+    "campaign": {
+      "precision": 0.8888888888888888,
+      "recall": 1.0,
+      "f1": 0.9375,
+      "roc_auc": 0.7857142857142857
+    },
+    "seasonality": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "roc_auc": 1.0
+    }
+  },
+  "evaluation_mode": "cv",
+  "cv_splits": 5,
+  "cv_folds": [
+    {
+      "fold": 3,
+      "train_rows": 37,
+      "val_rows": 9,
+      "metrics": {
+        "campaign": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "roc_auc": null
+        },
+        "seasonality": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "roc_auc": 1.0
+        },
+        "joint_accuracy": 1.0
+      },
+      "thresholds": {
+        "campaign": 0.545,
+        "seasonality": 0.7125
+      }
+    },
+    {
+      "fold": 4,
+      "train_rows": 46,
+      "val_rows": 9,
+      "metrics": {
+        "campaign": {
+          "precision": 0.7777777777777778,
+          "recall": 1.0,
+          "f1": 0.875,
+          "roc_auc": 0.7857142857142857
+        },
+        "seasonality": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "roc_auc": 1.0
+        },
+        "joint_accuracy": 0.7777777777777778
+      },
+      "thresholds": {
+        "campaign": 0.5925,
+        "seasonality": 0.8
+      }
+    }
+  ],
+  "thresholds": {
+    "campaign": 0.5687500000000001,
+    "seasonality": 0.7562500000000001
+  },
+  "feature_importances": {
+    "campaign": [
+      {
+        "feature": "trend",
+        "importance": 0.0859325753878897
+      },
+      {
+        "feature": "trend_cubed",
+        "importance": 0.08342351687767131
+      },
+      {
+        "feature": "trend_norm",
+        "importance": 0.07845285659567852
+      },
+      {
+        "feature": "campaign_month",
+        "importance": 0.06382254893243006
+      },
+      {
+        "feature": "trend_squared",
+        "importance": 0.06193673198620665
+      },
+      {
+        "feature": "campaign",
+        "importance": 0.05593309756120656
+      },
+      {
+        "feature": "quantity_min9",
+        "importance": 0.04909934914385339
+      },
+      {
+        "feature": "quantity_min12",
+        "importance": 0.04049697517224385
+      },
+      {
+        "feature": "quantity_std12",
+        "importance": 0.03896703387830184
+      },
+      {
+        "feature": "campaign_lag_2",
+        "importance": 0.03308187134468633
+      }
+    ],
+    "seasonality": [
+      {
+        "feature": "month_cos",
+        "importance": 0.1172807869182288
+      },
+      {
+        "feature": "is_summer",
+        "importance": 0.08347210613626173
+      },
+      {
+        "feature": "quantity_pct_change_smooth",
+        "importance": 0.06279409749203373
+      },
+      {
+        "feature": "quarter_cos",
+        "importance": 0.059265280470022316
+      },
+      {
+        "feature": "quarter_3",
+        "importance": 0.059065497537660654
+      },
+      {
+        "feature": "quarter_sin",
+        "importance": 0.057358198397116006
+      },
+      {
+        "feature": "month",
+        "importance": 0.05396765904900655
+      },
+      {
+        "feature": "seasonality_month",
+        "importance": 0.02988007860723463
+      },
+      {
+        "feature": "quantity_pct_change",
+        "importance": 0.028638767463516394
+      },
+      {
+        "feature": "quantity_lag4",
+        "importance": 0.02765594448660111
+      }
+    ]
+  },
+  "hyperparameters": {
+    "n_estimators": 400,
+    "max_depth": null,
+    "max_features": "sqrt",
+    "calibrate_proba": false
+  },
+  "model_path": "/workspaces/DemandAI/models/flags/bombom_moranguete_13g_160un/flag_classifier_h1.joblib"
+}

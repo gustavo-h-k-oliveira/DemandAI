@@ -1,0 +1,268 @@
+{
+  "product": "TOPBEL TRADICIONAL 50UN",
+  "slug": "topbel_tradicional_50un",
+  "horizon": 1,
+  "train_end_year": 2023,
+  "train_rows": 55,
+  "test_rows": 0,
+  "feature_columns": [
+    "year",
+    "month",
+    "campaign",
+    "seasonality",
+    "quarter",
+    "month_sin",
+    "month_cos",
+    "quarter_sin",
+    "quarter_cos",
+    "quantity_lag1",
+    "quantity_lag2",
+    "quantity_lag3",
+    "quantity_lag4",
+    "quantity_lag6",
+    "quantity_lag12",
+    "quantity_ma3",
+    "quantity_std3",
+    "quantity_min3",
+    "quantity_max3",
+    "quantity_ma6",
+    "quantity_std6",
+    "quantity_min6",
+    "quantity_max6",
+    "quantity_ma9",
+    "quantity_std9",
+    "quantity_min9",
+    "quantity_max9",
+    "quantity_ma12",
+    "quantity_std12",
+    "quantity_min12",
+    "quantity_max12",
+    "quantity_ewm3",
+    "quantity_ewm6",
+    "quantity_ewm12",
+    "quantity_volatility3",
+    "quantity_volatility6",
+    "quantity_stability_3",
+    "quantity_stability_6",
+    "trend",
+    "trend_norm",
+    "trend_squared",
+    "trend_cubed",
+    "quantity_pct_change",
+    "quantity_pct_change_smooth",
+    "quantity_diff",
+    "quantity_diff2",
+    "is_high_season",
+    "is_low_season",
+    "is_holiday_season",
+    "is_summer",
+    "is_winter",
+    "quantity_yoy",
+    "yoy_diff",
+    "yoy_growth",
+    "campaign_season_interaction",
+    "campaign_season",
+    "campaign_month",
+    "seasonality_month",
+    "campaign_high_season",
+    "seasonality_summer",
+    "month_1",
+    "month_2",
+    "month_3",
+    "month_4",
+    "month_5",
+    "month_6",
+    "month_7",
+    "month_8",
+    "month_9",
+    "month_10",
+    "month_11",
+    "month_12",
+    "quarter_1",
+    "quarter_2",
+    "quarter_3",
+    "quarter_4",
+    "quantity_lag_1",
+    "quantity_lag_2",
+    "quantity_lag_3",
+    "campaign_lag_1",
+    "campaign_lag_2",
+    "campaign_lag_3",
+    "seasonality_lag_1",
+    "seasonality_lag_2",
+    "seasonality_lag_3",
+    "quantity_roll_mean_3",
+    "quantity_roll_std_3",
+    "quantity_roll_median_3",
+    "quantity_roll_mean_6",
+    "quantity_roll_std_6",
+    "quantity_roll_median_6",
+    "quantity_roll_mean_12",
+    "quantity_roll_std_12",
+    "quantity_roll_median_12"
+  ],
+  "metrics": {
+    "joint_accuracy": 0.5,
+    "campaign": {
+      "precision": 0.875,
+      "recall": 0.5952380952380952,
+      "f1": 0.65,
+      "roc_auc": 0.75
+    },
+    "seasonality": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "roc_auc": 1.0
+    }
+  },
+  "evaluation_mode": "cv",
+  "cv_splits": 5,
+  "cv_folds": [
+    {
+      "fold": 3,
+      "train_rows": 37,
+      "val_rows": 9,
+      "metrics": {
+        "campaign": {
+          "precision": 1.0,
+          "recall": 0.3333333333333333,
+          "f1": 0.5,
+          "roc_auc": null
+        },
+        "seasonality": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "roc_auc": 1.0
+        },
+        "joint_accuracy": 0.3333333333333333
+      },
+      "thresholds": {
+        "campaign": 0.345,
+        "seasonality": 0.65
+      }
+    },
+    {
+      "fold": 4,
+      "train_rows": 46,
+      "val_rows": 9,
+      "metrics": {
+        "campaign": {
+          "precision": 0.75,
+          "recall": 0.8571428571428571,
+          "f1": 0.8,
+          "roc_auc": 0.75
+        },
+        "seasonality": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "roc_auc": 1.0
+        },
+        "joint_accuracy": 0.6666666666666666
+      },
+      "thresholds": {
+        "campaign": 0.5,
+        "seasonality": 0.65
+      }
+    }
+  ],
+  "thresholds": {
+    "campaign": 0.4225,
+    "seasonality": 0.65
+  },
+  "feature_importances": {
+    "campaign": [
+      {
+        "feature": "trend",
+        "importance": 0.1086321969444171
+      },
+      {
+        "feature": "trend_cubed",
+        "importance": 0.09543748912448959
+      },
+      {
+        "feature": "trend_norm",
+        "importance": 0.09213662730823133
+      },
+      {
+        "feature": "trend_squared",
+        "importance": 0.08021371068089671
+      },
+      {
+        "feature": "campaign_month",
+        "importance": 0.07769776412777012
+      },
+      {
+        "feature": "campaign",
+        "importance": 0.06905931291791739
+      },
+      {
+        "feature": "year",
+        "importance": 0.05048223503494423
+      },
+      {
+        "feature": "campaign_lag_2",
+        "importance": 0.04708699208108377
+      },
+      {
+        "feature": "campaign_lag_1",
+        "importance": 0.04008557724253783
+      },
+      {
+        "feature": "campaign_lag_3",
+        "importance": 0.03253333951014184
+      }
+    ],
+    "seasonality": [
+      {
+        "feature": "month_cos",
+        "importance": 0.11784014371713881
+      },
+      {
+        "feature": "is_summer",
+        "importance": 0.08339621501773582
+      },
+      {
+        "feature": "quarter_cos",
+        "importance": 0.0629433590377841
+      },
+      {
+        "feature": "quarter_3",
+        "importance": 0.06132280282637431
+      },
+      {
+        "feature": "quarter_sin",
+        "importance": 0.056345651365286985
+      },
+      {
+        "feature": "month",
+        "importance": 0.04518498064606311
+      },
+      {
+        "feature": "seasonality_month",
+        "importance": 0.030948444553866427
+      },
+      {
+        "feature": "quantity_ewm3",
+        "importance": 0.02467103668110803
+      },
+      {
+        "feature": "month_6",
+        "importance": 0.02337678844605946
+      },
+      {
+        "feature": "quantity_pct_change_smooth",
+        "importance": 0.022160815918688483
+      }
+    ]
+  },
+  "hyperparameters": {
+    "n_estimators": 400,
+    "max_depth": null,
+    "max_features": "sqrt",
+    "calibrate_proba": false
+  },
+  "model_path": "/workspaces/DemandAI/models/flags/topbel_tradicional_50un/flag_classifier_h1.joblib"
+}

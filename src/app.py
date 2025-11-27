@@ -41,6 +41,7 @@ def compute_features_from_history(df_hist: pd.DataFrame, model_data) -> pd.DataF
     target['trend_cubed'] = float(target['trend']) ** 3
     # Variante normalizada (Ridge): usaremos ao alimentar colunas específicas
     trend_norm = (series_len - 1) / series_len
+    target['trend_norm'] = trend_norm
 
     # Crescimento
     pct_change = q.pct_change().fillna(0.0)
@@ -92,10 +93,12 @@ def compute_features_from_history(df_hist: pd.DataFrame, model_data) -> pd.DataF
     if len(df) > 12:
         yoy = float(df.iloc[-13]['quantity'])
         target['quantity_yoy'] = yoy
+        target['yoy_diff'] = float(df.iloc[-2]['quantity'] - yoy)
         target['yoy_growth'] = float(((df.iloc[-2]['quantity'] - yoy) / yoy)) if yoy not in (0, 0.0) else 0.0
         target['yoy_acceleration'] = float('nan')  # não usada no Ridge
     else:
         target['quantity_yoy'] = 0.0
+        target['yoy_diff'] = 0.0
         target['yoy_growth'] = 0.0
         target['yoy_acceleration'] = 0.0
 
@@ -131,9 +134,11 @@ from pydantic import BaseModel, Field
 import joblib
 import numpy as np
 import pandas as pd
-from typing import List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 import os
 import csv
+import json
+import logging
 from collections import deque
 from datetime import datetime
 from fastapi.responses import JSONResponse
@@ -144,12 +149,54 @@ MODELS_DIR = os.path.abspath(os.path.join(BASE_DIR, "../models"))
 DATA_DIR = os.path.abspath(os.path.join(BASE_DIR, "../data"))
 DATASET_PATH = os.path.join(DATA_DIR, "dataset.csv")
 PREDICTIONS_LOG_PATH = os.path.join(DATA_DIR, "predictions_log.csv")
+FLAG_PREDICTIONS_PATH = os.path.join(DATA_DIR, "predicted_flags_h1.csv")
 
-# Apenas modelos Random Forest ativos (modelos Lasso/Ridge comentados/indisponíveis)
-RF_BOMBOM_MODEL_PATH = os.path.join(MODELS_DIR, "bombom_moranguete_rf_model.pkl")
-RF_TETA_BEL_MODEL_PATH = os.path.join(MODELS_DIR, "teta_bel_rf_model.pkl")
-RF_TOPBEL_LEITE_MODEL_PATH = os.path.join(MODELS_DIR, "topbel_leite_condensado_rf_model.pkl")
-RF_TOPBEL_TRADICIONAL_MODEL_PATH = os.path.join(MODELS_DIR, "topbel_tradicional_rf_model.pkl")
+DEFAULT_RF_FEATURES = [
+    'year', 'month', 'campaign', 'seasonality', 'quarter', 'month_sin', 'month_cos',
+    'quarter_sin', 'quarter_cos', 'quantity_lag1', 'quantity_lag2', 'quantity_lag3',
+    'quantity_lag4', 'quantity_lag6', 'quantity_lag12', 'quantity_ma3', 'quantity_std3',
+    'quantity_min3', 'quantity_max3', 'quantity_ma6', 'quantity_std6', 'quantity_min6',
+    'quantity_max6', 'quantity_ma9', 'quantity_std9', 'quantity_min9', 'quantity_max9',
+    'quantity_ma12', 'quantity_std12', 'quantity_min12', 'quantity_max12', 'quantity_ewm3',
+    'quantity_ewm6', 'quantity_ewm12', 'quantity_volatility3', 'quantity_volatility6',
+    'quantity_stability_3', 'quantity_stability_6', 'trend', 'trend_norm', 'trend_squared', 'trend_cubed',
+    'quantity_pct_change', 'quantity_pct_change_smooth', 'quantity_diff', 'quantity_diff2',
+    'is_high_season', 'is_low_season', 'is_holiday_season', 'is_summer', 'is_winter',
+    'quantity_yoy', 'yoy_diff', 'yoy_growth', 'campaign_season_interaction', 'campaign_season',
+    'campaign_month', 'seasonality_month', 'campaign_high_season', 'seasonality_summer',
+    'month_1', 'month_2', 'month_3', 'month_4', 'month_5', 'month_6', 'month_7', 'month_8',
+    'month_9', 'month_10', 'month_11', 'month_12', 'quarter_1', 'quarter_2', 'quarter_3',
+    'quarter_4'
+]
+
+RF_MODEL_SPECS: Dict[str, Dict[str, Any]] = {
+    "rf_bombom": {
+        "product": "BOMBOM MORANGUETE 13G 160UN",
+        "model_path": os.path.join(MODELS_DIR, "bombom_moranguete_rf_model.pkl"),
+        "info_path": os.path.join(MODELS_DIR, "bombom_moranguete_rf_model_info.json"),
+    },
+    "rf_teta_bel": {
+        "product": "TETA BEL TRADICIONAL 50UN",
+        "model_path": os.path.join(MODELS_DIR, "teta_bel_rf_model.pkl"),
+        "info_path": os.path.join(MODELS_DIR, "teta_bel_rf_model_info.json"),
+    },
+    "rf_topbel_leite": {
+        "product": "TOPBEL LEITE CONDENSADO 50UN",
+        "model_path": os.path.join(MODELS_DIR, "topbel_leite_condensado_rf_model.pkl"),
+        "info_path": os.path.join(MODELS_DIR, "topbel_leite_condensado_rf_model_info.json"),
+    },
+    "rf_topbel_tradicional": {
+        "product": "TOPBEL TRADICIONAL 50UN",
+        "model_path": os.path.join(MODELS_DIR, "topbel_tradicional_rf_model.pkl"),
+        "info_path": os.path.join(MODELS_DIR, "topbel_tradicional_rf_model_info.json"),
+    },
+}
+
+flag_predictions_cache: Dict[Tuple[str, int, int], Dict[str, Any]] = {}
+
+lasso_model = None
+ridge_model = None
+bombom_model = None
 
 app = FastAPI(title="DemandAI")
 # Monta diretório /static para servir CSS/JS/imagens
@@ -213,17 +260,81 @@ class PredictionInput(BaseModel):
     history: Optional[List[HistoryRecord]] = Field(None, description="Histórico do produto; se ausente, usa dataset interno")
 
 def _product_name_from_model(model_type: str) -> str:
-    if model_type in ('topbel_lasso', 'topbel_ridge', 'rf_topbel_leite'):
+    if model_type in ('topbel_lasso', 'topbel_ridge'):
         return "TOPBEL LEITE CONDENSADO 50UN"
-    if model_type in ('bombom_lasso', 'rf_bombom'):
+    if model_type == 'bombom_lasso':
         return "BOMBOM MORANGUETE 13G 160UN"
-    if model_type == 'rf_teta_bel':
-        return "TETA BEL TRADICIONAL 50UN"
-    if model_type == 'rf_topbel_tradicional':
-        return "TOPBEL TRADICIONAL 50UN"
+    spec = RF_MODEL_SPECS.get(model_type)
+    if spec:
+        return spec['product']
     raise HTTPException(status_code=400, detail="Modelo não suportado.")
 
-def build_history_from_dataset(model_type: str, year: int, month: int, campaign: int, seasonality: int) -> pd.DataFrame:
+
+def _load_flag_predictions() -> None:
+    global flag_predictions_cache
+    if not os.path.exists(FLAG_PREDICTIONS_PATH):
+        flag_predictions_cache = {}
+        return
+    try:
+        df_flags = pd.read_csv(FLAG_PREDICTIONS_PATH)
+        df_flags.columns = [str(col).strip() for col in df_flags.columns]
+    except Exception as exc:
+        logging.warning("Falha ao ler predicted_flags_h1.csv: %s", exc)
+        flag_predictions_cache = {}
+        return
+
+    cache: Dict[Tuple[str, int, int], Dict[str, Any]] = {}
+    required_cols = {
+        'product', 'target_year', 'target_month',
+        'campaign_prediction', 'seasonality_prediction',
+        'campaign_probability', 'seasonality_probability'
+    }
+    missing_cols = required_cols.difference(df_flags.columns)
+    if missing_cols:
+        logging.warning("Arquivo de flags não possui colunas %s", missing_cols)
+    for _, row in df_flags.iterrows():
+        try:
+            product_name = str(row.get('product') or row.get('slug') or '').strip()
+            if not product_name:
+                continue
+            key = (product_name, int(row['target_year']), int(row['target_month']))
+            cache[key] = {
+                'campaign_prediction': int(row.get('campaign_prediction', 0)),
+                'seasonality_prediction': int(row.get('seasonality_prediction', 0)),
+                'campaign_probability': float(row.get('campaign_probability', 0.0)),
+                'seasonality_probability': float(row.get('seasonality_probability', 0.0)),
+            }
+        except Exception:
+            continue
+    flag_predictions_cache = cache
+
+
+def get_predicted_flags(product: str, target_year: int, target_month: int) -> Optional[Dict[str, Any]]:
+    if not flag_predictions_cache:
+        _load_flag_predictions()
+    return flag_predictions_cache.get((product, target_year, target_month))
+
+
+def _load_feature_columns(info_path: str) -> List[str]:
+    if not info_path or not os.path.exists(info_path):
+        return DEFAULT_RF_FEATURES
+    try:
+        with open(info_path, "r", encoding="utf-8") as fp:
+            data = json.load(fp)
+        features = data.get("features") or data.get("feature_columns")
+        if isinstance(features, list) and features:
+            return features
+    except Exception as exc:
+        logging.warning("Falha ao ler feature columns de %s: %s", info_path, exc)
+    return DEFAULT_RF_FEATURES
+
+def build_history_from_dataset(
+    model_type: str,
+    year: int,
+    month: int,
+    campaign: Optional[int],
+    seasonality: Optional[int],
+) -> Tuple[pd.DataFrame, int, int]:
     try:
         df = pd.read_csv(DATASET_PATH, sep=',', encoding='latin1')
     except Exception as e:
@@ -246,17 +357,21 @@ def build_history_from_dataset(model_type: str, year: int, month: int, campaign:
     # Idealmente manter pelo menos 12 meses
     if len(df_hist) > 24:
         df_hist = df_hist.iloc[-24:].copy()
+    last_observed = df_hist.iloc[-1]
+    inferred_campaign = int(campaign if campaign is not None else last_observed['campaign'])
+    inferred_seasonality = int(seasonality if seasonality is not None else last_observed['seasonality'])
+
     # Adicionar linha do alvo com quantity=0
     target_row = {
         'product': product_name,
         'year': year,
         'month': month,
-        'campaign': campaign,
-        'seasonality': seasonality,
+        'campaign': inferred_campaign,
+        'seasonality': inferred_seasonality,
         'quantity': 0.0
     }
     df_hist = pd.concat([df_hist, pd.DataFrame([target_row])], ignore_index=True)
-    return df_hist[['year','month','campaign','seasonality','quantity']]
+    return df_hist[['year','month','campaign','seasonality','quantity']], inferred_campaign, inferred_seasonality
 
 
 def _append_prediction_log(entry: dict) -> None:
@@ -322,22 +437,40 @@ def recent_predictions(limit: int = 10):
 @app.on_event("startup")
 def load_models():
     global lasso_model, ridge_model, bombom_model
-    global rf_bombom_model, rf_teta_bel_model, rf_topbel_leite_model, rf_topbel_tradicional_model
-    
-    # Modelos originais (Lasso/Ridge)
+
+    # Modelos Lasso/Ridge permanecem desativados; mantidos para compatibilidade
     # lasso_model = joblib.load(LASSO_MODEL_PATH) if os.path.exists(LASSO_MODEL_PATH) else None
     # ridge_model = joblib.load(RIDGE_MODEL_PATH) if os.path.exists(RIDGE_MODEL_PATH) else None
     # bombom_model = joblib.load(BOMBOM_MODEL_PATH) if os.path.exists(BOMBOM_MODEL_PATH) else None
-    
-    # Modelos Random Forest
-    rf_bombom_model = joblib.load(RF_BOMBOM_MODEL_PATH) if os.path.exists(RF_BOMBOM_MODEL_PATH) else None
-    rf_teta_bel_model = joblib.load(RF_TETA_BEL_MODEL_PATH) if os.path.exists(RF_TETA_BEL_MODEL_PATH) else None
-    rf_topbel_leite_model = joblib.load(RF_TOPBEL_LEITE_MODEL_PATH) if os.path.exists(RF_TOPBEL_LEITE_MODEL_PATH) else None
-    rf_topbel_tradicional_model = joblib.load(RF_TOPBEL_TRADICIONAL_MODEL_PATH) if os.path.exists(RF_TOPBEL_TRADICIONAL_MODEL_PATH) else None
+
+    for model_key, spec in RF_MODEL_SPECS.items():
+        model_path = spec.get('model_path')
+        info_path = spec.get('info_path')
+
+        if model_path and os.path.exists(model_path):
+            try:
+                spec['model'] = joblib.load(model_path)
+            except Exception as exc:
+                logging.error("Falha ao carregar modelo %s: %s", model_key, exc)
+                spec['model'] = None
+        else:
+            logging.warning("Modelo %s não encontrado em %s", model_key, model_path)
+            spec['model'] = None
+
+        spec['feature_columns'] = _load_feature_columns(info_path)
+
+    _load_flag_predictions()
 
 
 # Função para preparar features para modelos Random Forest
-def prepare_rf_features(df_hist: pd.DataFrame, target_year: int, target_month: int, target_campaign: int, target_seasonality: int) -> pd.DataFrame:
+def prepare_rf_features(
+    df_hist: pd.DataFrame,
+    target_year: int,
+    target_month: int,
+    target_campaign: int,
+    target_seasonality: int,
+    feature_columns: List[str],
+) -> pd.DataFrame:
     """
     Prepara features para modelos Random Forest a partir do histórico.
     Os modelos RF esperam as mesmas 76 features que foram usadas no treinamento.
@@ -357,32 +490,13 @@ def prepare_rf_features(df_hist: pd.DataFrame, target_year: int, target_month: i
     # Adicionar a linha alvo ao histórico
     df_complete = pd.concat([df_hist, pd.DataFrame([target_row])], ignore_index=True).reset_index(drop=True)
     
-    # Usar a função existente que já calcula todas as features necessárias
-    # Criamos um mock de model_data que contém as features dos modelos RF
-    mock_model_data = {
-        'feature_columns': [
-            'year', 'month', 'campaign', 'seasonality', 'quarter', 'month_sin', 'month_cos',
-            'quarter_sin', 'quarter_cos', 'quantity_lag1', 'quantity_lag2', 'quantity_lag3',
-            'quantity_lag4', 'quantity_lag6', 'quantity_lag12', 'quantity_ma3', 'quantity_std3',
-            'quantity_min3', 'quantity_max3', 'quantity_ma6', 'quantity_std6', 'quantity_min6',
-            'quantity_max6', 'quantity_ma9', 'quantity_std9', 'quantity_min9', 'quantity_max9',
-            'quantity_ma12', 'quantity_std12', 'quantity_min12', 'quantity_max12', 'quantity_ewm3',
-            'quantity_ewm6', 'quantity_ewm12', 'quantity_volatility3', 'quantity_volatility6',
-            'quantity_stability_3', 'quantity_stability_6', 'trend', 'trend_norm', 'trend_squared',
-            'trend_cubed', 'quantity_pct_change', 'quantity_pct_change_smooth', 'quantity_diff',
-            'quantity_diff2', 'is_high_season', 'is_low_season', 'is_holiday_season', 'is_summer',
-            'is_winter', 'quantity_yoy', 'yoy_diff', 'yoy_growth', 'campaign_season_interaction',
-            'campaign_season', 'campaign_month', 'seasonality_month', 'campaign_high_season',
-            'seasonality_summer', 'month_1', 'month_2', 'month_3', 'month_4', 'month_5',
-            'month_6', 'month_7', 'month_8', 'month_9', 'month_10', 'month_11', 'month_12',
-            'quarter_1', 'quarter_2', 'quarter_3', 'quarter_4'
-        ]
-    }
-    
-    # Calcular features usando a função existente
+    mock_model_data = {'feature_columns': feature_columns or DEFAULT_RF_FEATURES}
+
     X = compute_features_from_history(df_complete, mock_model_data)
-    
-    return X
+    missing_cols = [col for col in mock_model_data['feature_columns'] if col not in X.columns]
+    for col in missing_cols:
+        X[col] = 0.0
+    return X[mock_model_data['feature_columns']]
 
 
 # Helper: cap prediction based on historical maxima to avoid unrealistic extremes
@@ -412,6 +526,7 @@ def predict(input: PredictionInput):
     # Selecionar modelo
     model_data = None
     is_rf_model = False
+    rf_feature_columns: Optional[List[str]] = None
     
     if input.model_type == 'topbel_lasso':
         model_data = lasso_model
@@ -419,27 +534,31 @@ def predict(input: PredictionInput):
         model_data = ridge_model
     elif input.model_type == 'bombom_lasso':
         model_data = bombom_model
-    elif input.model_type == 'rf_bombom':
-        model_data = rf_bombom_model
-        is_rf_model = True
-    elif input.model_type == 'rf_teta_bel':
-        model_data = rf_teta_bel_model
-        is_rf_model = True
-    elif input.model_type == 'rf_topbel_leite':
-        model_data = rf_topbel_leite_model
-        is_rf_model = True
-    elif input.model_type == 'rf_topbel_tradicional':
-        model_data = rf_topbel_tradicional_model
-        is_rf_model = True
     else:
-        raise HTTPException(status_code=400, detail="Modelo não suportado.")
+        rf_spec = RF_MODEL_SPECS.get(input.model_type)
+        if rf_spec:
+            model_data = rf_spec.get('model')
+            rf_feature_columns = rf_spec.get('feature_columns') or DEFAULT_RF_FEATURES
+            is_rf_model = True
+        else:
+            raise HTTPException(status_code=400, detail="Modelo não suportado.")
     
     if model_data is None:
         raise HTTPException(status_code=500, detail="Modelo não carregado.")
 
+    product_name = _product_name_from_model(input.model_type)
+    applied_campaign: Optional[int] = input.campaign if input.campaign is not None else None
+    applied_seasonality: Optional[int] = input.seasonality if input.seasonality is not None else None
+    flag_source = "user"
+
     # Obter histórico: usar o fornecido ou montar a partir do dataset
     if input.history is not None and len(input.history) > 0:
         df_hist = pd.DataFrame([r.dict() for r in input.history])
+        if not {'year','month','campaign','seasonality','quantity'}.issubset(df_hist.columns):
+            raise HTTPException(status_code=400, detail="Histórico precisa conter year, month, campaign, seasonality e quantity")
+        applied_campaign = int(df_hist.iloc[-1]['campaign'])
+        applied_seasonality = int(df_hist.iloc[-1]['seasonality'])
+        flag_source = "history"
     else:
         # Validar parâmetros do mês alvo
         missing = [name for name, val in {
@@ -449,14 +568,31 @@ def predict(input: PredictionInput):
             'seasonality': input.seasonality
         }.items() if val is None]
         if missing:
+            # campaign/seasonality podem ser preenchidos pelas flags preditas
+            missing = [m for m in missing if m not in {'campaign', 'seasonality'}]
+        if missing:
             raise HTTPException(status_code=400, detail=f"Parâmetros ausentes para montar histórico: {', '.join(missing)}")
-        df_hist = build_history_from_dataset(
+
+        target_year = int(input.year)
+        target_month = int(input.month)
+        predicted_flags = get_predicted_flags(product_name, target_year, target_month)
+        if predicted_flags:
+            if applied_campaign is None:
+                applied_campaign = predicted_flags['campaign_prediction']
+                flag_source = "predicted"
+            if applied_seasonality is None:
+                applied_seasonality = predicted_flags['seasonality_prediction']
+                flag_source = "predicted"
+
+        df_hist, applied_campaign, applied_seasonality = build_history_from_dataset(
             input.model_type,
             int(input.year),
             int(input.month),
-            int(input.campaign),
-            int(input.seasonality)
+            applied_campaign,
+            applied_seasonality,
         )
+        if flag_source == "user" and (input.campaign is None or input.seasonality is None):
+            flag_source = "history"
     if df_hist is None or len(df_hist) < 2:
         raise HTTPException(status_code=400, detail="Histórico insuficiente para calcular features compostas.")
 
@@ -467,8 +603,9 @@ def predict(input: PredictionInput):
             df_hist[:-1] if len(df_hist) > 1 else df_hist,  # Histórico sem a linha alvo
             int(input.year) if input.year else df_hist.iloc[-1]['year'],
             int(input.month) if input.month else df_hist.iloc[-1]['month'],
-            int(input.campaign) if input.campaign else df_hist.iloc[-1]['campaign'],
-            int(input.seasonality) if input.seasonality else df_hist.iloc[-1]['seasonality']
+            int(applied_campaign if applied_campaign is not None else df_hist.iloc[-1]['campaign']),
+            int(applied_seasonality if applied_seasonality is not None else df_hist.iloc[-1]['seasonality']),
+            rf_feature_columns or DEFAULT_RF_FEATURES,
         )
         pred = model_data.predict(X)
     else:
@@ -486,8 +623,8 @@ def predict(input: PredictionInput):
         "model_type": input.model_type,
         "year": input.year if input.year is not None else int(df_hist.iloc[-1]['year']),
         "month": input.month if input.month is not None else int(df_hist.iloc[-1]['month']),
-        "campaign": input.campaign if input.campaign is not None else int(df_hist.iloc[-1]['campaign']),
-        "seasonality": input.seasonality if input.seasonality is not None else int(df_hist.iloc[-1]['seasonality']),
+        "campaign": int(applied_campaign if applied_campaign is not None else df_hist.iloc[-1]['campaign']),
+        "seasonality": int(applied_seasonality if applied_seasonality is not None else df_hist.iloc[-1]['seasonality']),
         "prediction": pred_int
     }
     _append_prediction_log(log_entry)
@@ -496,6 +633,11 @@ def predict(input: PredictionInput):
     return {
         "prediction": pred_int,
         "model_used": input.model_type,
+        "applied_flags": {
+            "campaign": int(applied_campaign if applied_campaign is not None else df_hist.iloc[-1]['campaign']),
+            "seasonality": int(applied_seasonality if applied_seasonality is not None else df_hist.iloc[-1]['seasonality'])
+        },
+        "flag_source": flag_source,
         "user_predictions": user_predictions
     }
 
@@ -513,17 +655,9 @@ def debug_inspect(input: PredictionInput):
     # elif input.model_type == 'bombom_lasso':
     #     model_data = bombom_model
     
-    if input.model_type == 'rf_bombom':
-        model_data = rf_bombom_model
-        is_rf_model = True
-    elif input.model_type == 'rf_teta_bel':
-        model_data = rf_teta_bel_model
-        is_rf_model = True
-    elif input.model_type == 'rf_topbel_leite':
-        model_data = rf_topbel_leite_model
-        is_rf_model = True
-    elif input.model_type == 'rf_topbel_tradicional':
-        model_data = rf_topbel_tradicional_model
+    rf_spec = RF_MODEL_SPECS.get(input.model_type)
+    if rf_spec:
+        model_data = rf_spec.get('model')
         is_rf_model = True
     else:
         raise HTTPException(status_code=400, detail="Modelo não suportado.")
@@ -542,23 +676,26 @@ def debug_inspect(input: PredictionInput):
         }.items() if val is None]
         if missing:
             raise HTTPException(status_code=400, detail=f"Parâmetros ausentes para montar histórico: {', '.join(missing)}")
-        df_hist = build_history_from_dataset(
+        df_hist, _, _ = build_history_from_dataset(
             input.model_type,
             int(input.year),
             int(input.month),
-            int(input.campaign),
-            int(input.seasonality)
+            input.campaign,
+            input.seasonality,
         )
     
     # Processar de acordo com o tipo de modelo
     if is_rf_model:
+        rf_spec = RF_MODEL_SPECS.get(input.model_type)
+        feature_columns = rf_spec.get('feature_columns') if rf_spec else DEFAULT_RF_FEATURES
         # Para modelos Random Forest, usamos feature importance em vez de coeficientes lineares
         X = prepare_rf_features(
             df_hist[:-1] if len(df_hist) > 1 else df_hist,
             int(input.year) if input.year else df_hist.iloc[-1]['year'],
             int(input.month) if input.month else df_hist.iloc[-1]['month'],
-            int(input.campaign) if input.campaign else df_hist.iloc[-1]['campaign'],
-            int(input.seasonality) if input.seasonality else df_hist.iloc[-1]['seasonality']
+            int(input.campaign) if input.campaign else int(df_hist.iloc[-1]['campaign']),
+            int(input.seasonality) if input.seasonality else int(df_hist.iloc[-1]['seasonality']),
+            feature_columns or DEFAULT_RF_FEATURES,
         )
         
         pred_raw = float(model_data.predict(X)[0])
