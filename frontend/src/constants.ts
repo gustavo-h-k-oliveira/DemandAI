@@ -17,5 +17,6 @@ export const DEFAULT_PAYLOAD: PredictionPayload = {
   year: new Date().getFullYear(),
   month: new Date().getMonth() + 1,
   campaign: null,
-  seasonality: null
+  seasonality: null,
+  productQuery: ''
 };

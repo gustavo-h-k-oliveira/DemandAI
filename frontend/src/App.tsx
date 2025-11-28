@@ -32,6 +32,14 @@ function App(): JSX.Element {
       return;
     }
 
+    if (name === 'product') {
+      setFormData((prev) => ({
+        ...prev,
+        productQuery: value
+      }));
+      return;
+    }
+
     setFormData((prev) => ({
       ...prev,
       [name]: Number(value)

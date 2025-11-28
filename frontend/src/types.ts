@@ -10,6 +10,7 @@ export interface PredictionPayload {
   month: number;
   campaign: number | null;
   seasonality: number | null;
+  productQuery?: string;
 }
 
 export interface HistoryPrediction {

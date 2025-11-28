@@ -141,6 +141,7 @@ import json
 import logging
 from collections import deque
 from datetime import datetime
+import unicodedata
 from fastapi.responses import JSONResponse
 
 # Caminhos absolutos baseados no local deste arquivo (robusto para Docker e execução local)
@@ -150,6 +151,15 @@ DATA_DIR = os.path.abspath(os.path.join(BASE_DIR, "../data"))
 DATASET_PATH = os.path.join(DATA_DIR, "dataset.csv")
 PREDICTIONS_LOG_PATH = os.path.join(DATA_DIR, "predictions_log.csv")
 FLAG_PREDICTIONS_PATH = os.path.join(DATA_DIR, "predicted_flags_h1.csv")
+
+
+def _normalize_column_name(value: str) -> str:
+    """Normalize dataset column headers (strip, lowercase, remove accents/spaces)."""
+    if value is None:
+        return ""
+    normalized = unicodedata.normalize("NFKD", str(value))
+    normalized = "".join(ch for ch in normalized if not unicodedata.combining(ch))
+    return normalized.strip().lower()
 
 DEFAULT_RF_FEATURES = [
     'year', 'month', 'campaign', 'seasonality', 'quarter', 'month_sin', 'month_cos',
@@ -339,12 +349,46 @@ def build_history_from_dataset(
         df = pd.read_csv(DATASET_PATH, sep=',', encoding='latin1')
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erro ao ler dataset.csv: {e}")
-    # Remover NaN e coluna PESOL, padronizar colunas
-    df = df.dropna()
-    if 'PESOL' in df.columns:
-        df = df.drop('PESOL', axis=1)
-    # Renomear colunas por posição conforme usado nos treinos
-    df.columns = ['product', 'year', 'month', 'campaign', 'seasonality', 'quantity']
+
+    # Padronizar nomes de colunas independentemente de maiúsculas/acentos/espacos
+    df.columns = [_normalize_column_name(col) for col in df.columns]
+    rename_map = {
+        'produto': 'product',
+        'ano': 'year',
+        'mes': 'month',
+        'campanha': 'campaign',
+        'sazonalidade': 'seasonality',
+        'pesol': 'pesol',
+        'quantidade': 'quantity',
+    }
+    df = df.rename(columns=rename_map)
+
+    # Garantir que as colunas necessárias existem
+    required_cols = {'product', 'year', 'month', 'campaign', 'seasonality', 'quantity'}
+    missing = required_cols - set(df.columns)
+    if missing:
+        # Fallback: aplicar mapeamento por posição quando headers estiverem corrompidos
+        ordered_cols = ['product', 'year', 'month', 'campaign', 'seasonality', 'pesol', 'quantity']
+        if len(df.columns) >= len(ordered_cols):
+            df = df.iloc[:, :len(ordered_cols)].copy()
+            df.columns = ordered_cols
+            missing = required_cols - set(df.columns)
+        if missing:
+            raise HTTPException(status_code=500, detail=f"Colunas ausentes no dataset: {sorted(missing)}")
+
+    # Remover coluna opcional PESOL e linhas vazias
+    if 'pesol' in df.columns:
+        df = df.drop(columns=['pesol'])
+    df = df.dropna(subset=list(required_cols))
+
+    # Reordenar colunas conforme esperado e normalizar espaços no nome do produto
+    df = df[['product', 'year', 'month', 'campaign', 'seasonality', 'quantity']]
+    df['product'] = df['product'].astype(str).str.strip()
+
+    numeric_cols = ['year', 'month', 'campaign', 'seasonality', 'quantity']
+    for col in numeric_cols:
+        df[col] = pd.to_numeric(df[col], errors='coerce')
+    df = df.dropna(subset=numeric_cols)
     product_name = _product_name_from_model(model_type)
     df = df[df['product'] == product_name].copy()
     if df.empty:

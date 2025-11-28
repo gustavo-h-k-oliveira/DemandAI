@@ -8,3 +8,4 @@ joblib
 pydantic
 Jinja2
 python-multipart
+httpx
