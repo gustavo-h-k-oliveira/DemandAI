@@ -13,12 +13,57 @@ export default function ResultPanel({ result, error }: ResultPanelProps) {
     history: 'Derivado do histórico'
   };
 
+  const batch = result?.batch_predictions ?? [];
+  const hasBatch = batch.length > 0;
+
   return (
     <section className="panel result">
-      <h2>Resultado</h2>
+      <h2>Resultados</h2>
       {error && <p className="error">{error}</p>}
 
-      {!error && result && (
+      {!error && result && hasBatch && (
+        <div className="batch-results">
+          {batch.map((entry) => {
+            const label = MODEL_LABELS[entry.model_type] ?? entry.model_type;
+            return (
+              <article key={entry.model_type} className="batch-card">
+                <dl>
+                  {entry.applied_flags && (
+                    <>
+                      <div>
+                        <h3>{label}</h3>
+                        <p className="prediction-value">{entry.prediction.toLocaleString('pt-BR')}</p>
+                      </div>
+                      <div>
+                        <dt>Campanha aplicada</dt>
+                        <dd>{entry.applied_flags.campaign ? 'Sim' : 'Não'}</dd>
+                      </div>
+                      <div>
+                        <dt>Sazonalidade prevista</dt>
+                        <dd>{entry.applied_flags.seasonality ? 'Sim' : 'Não'}</dd>
+                      </div>
+                    </>
+                  )}
+                  {entry.flag_source && (
+                    <div>
+                      <dt>Origem</dt>
+                      <dd>{flagSourceLabels[entry.flag_source] ?? entry.flag_source}</dd>
+                    </div>
+                  )}
+                  {entry.details && (
+                    <div>
+                      <dt>Detalhes</dt>
+                      <dd>{entry.details}</dd>
+                    </div>
+                  )}
+                </dl>
+              </article>
+            );
+          })}
+        </div>
+      )}
+
+      {!error && result && !hasBatch && (
         <dl>
           <div>
             <dt>Previsão</dt>

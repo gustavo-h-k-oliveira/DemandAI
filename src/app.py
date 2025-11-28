@@ -141,6 +141,7 @@ import json
 import logging
 from collections import deque
 from datetime import datetime
+from zoneinfo import ZoneInfo
 import unicodedata
 from fastapi.responses import JSONResponse
 
@@ -662,8 +663,16 @@ def predict(input: PredictionInput):
     pred_capped = cap_prediction(pred, df_hist)
     pred_int = int(round(pred_capped))
 
+    # Registrar timestamp no Horário de Brasília (America/Sao_Paulo)
+    try:
+        tz = ZoneInfo('America/Sao_Paulo')
+        ts_now = datetime.now(tz).isoformat()
+    except Exception:
+        # fallback para UTC se zoneinfo não estiver disponível
+        ts_now = datetime.utcnow().isoformat()
+
     log_entry = {
-        "timestamp": datetime.utcnow().isoformat(),
+        "timestamp": ts_now,
         "model_type": input.model_type,
         "year": input.year if input.year is not None else int(df_hist.iloc[-1]['year']),
         "month": input.month if input.month is not None else int(df_hist.iloc[-1]['month']),

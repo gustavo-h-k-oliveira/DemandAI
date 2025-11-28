@@ -4,13 +4,31 @@ export type ModelKey =
   | 'rf_topbel_tradicional'
   | 'rf_topbel_leite';
 
-export interface PredictionPayload {
-  model_type: ModelKey;
+interface PredictionBase {
   year: number;
   month: number;
   campaign: number | null;
   seasonality: number | null;
+}
+
+export interface PredictionPayload extends PredictionBase {
+  model_types: ModelKey[];
   productQuery?: string;
+}
+
+export interface SinglePredictionPayload extends PredictionBase {
+  model_type: ModelKey;
+}
+
+export interface BatchPredictionEntry {
+  model_type: ModelKey;
+  prediction: number;
+  details?: string;
+  flag_source?: 'user' | 'predicted' | 'history';
+  applied_flags?: {
+    campaign: number;
+    seasonality: number;
+  };
 }
 
 export interface HistoryPrediction {
@@ -43,4 +61,5 @@ export interface PredictionResponse {
     campaign: number;
     seasonality: number;
   };
+  batch_predictions?: BatchPredictionEntry[];
 }

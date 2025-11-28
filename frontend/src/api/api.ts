@@ -1,4 +1,4 @@
-import type { PredictionPayload, PredictionResponse, UserPrediction } from '../types';
+import type { PredictionResponse, SinglePredictionPayload, UserPrediction } from '../types';
 
 export async function getPredictions(): Promise<UserPrediction[]> {
   const res = await fetch('/predictions');
@@ -7,12 +7,11 @@ export async function getPredictions(): Promise<UserPrediction[]> {
   return payload.user_predictions ?? [];
 }
 
-export async function postPredict(payload: PredictionPayload): Promise<PredictionResponse> {
-  const { productQuery: _productQuery, ...payloadToSend } = payload;
+export async function postPredict(payload: SinglePredictionPayload): Promise<PredictionResponse> {
   const res = await fetch('/predict', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payloadToSend)
+    body: JSON.stringify(payload)
   });
   if (!res.ok) throw new Error(`Predict failed: ${res.status}`);
   return (await res.json()) as PredictionResponse;

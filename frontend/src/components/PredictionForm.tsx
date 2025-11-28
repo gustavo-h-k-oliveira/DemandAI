@@ -1,16 +1,27 @@
 import React, { FormEvent } from 'react';
-import { Brain, CaretUp, MagnifyingGlass, Plus } from 'phosphor-react';
-import type { PredictionPayload } from '../types';
-import { MODEL_OPTIONS } from '../constants';
+import { Brain, CaretUp, MagnifyingGlass, Plus, X } from 'phosphor-react';
+import type { ModelKey, PredictionPayload } from '../types';
+import { MODEL_LABELS, MODEL_OPTIONS } from '../constants';
 
 interface PredictionFormProps {
   formData: PredictionPayload;
-  onInput: (e: FormEvent<HTMLInputElement | HTMLSelectElement>) => void;
+  onFieldChange: (e: FormEvent<HTMLInputElement | HTMLSelectElement>) => void;
+  onProductQueryChange: (value: string) => void;
+  onToggleModel: (model: ModelKey) => void;
+  onRemoveModel: (model: ModelKey) => void;
   onSubmit: (e: FormEvent<HTMLFormElement>) => void;
   isLoading: boolean;
 }
 
-export default function PredictionForm({ formData, onInput, onSubmit, isLoading }: PredictionFormProps) {
+export default function PredictionForm({
+  formData,
+  onFieldChange,
+  onProductQueryChange,
+  onToggleModel,
+  onRemoveModel,
+  onSubmit,
+  isLoading
+}: PredictionFormProps) {
   const productQuery = formData.productQuery ?? '';
   const normalizedQuery = productQuery.trim().toLowerCase();
   const filteredOptions = normalizedQuery.length > 0
@@ -20,26 +31,27 @@ export default function PredictionForm({ formData, onInput, onSubmit, isLoading 
       )
     : MODEL_OPTIONS;
   const hasMatches = filteredOptions.length > 0;
-  const selectOptions = hasMatches ? filteredOptions : MODEL_OPTIONS;
+  const displayOptions = hasMatches ? filteredOptions : MODEL_OPTIONS;
+  const selectedModels = formData.model_types;
 
   return (
     <form className="panel" onSubmit={onSubmit}>
-      <label className='input-form'>
-        <div>
-          <CaretUp size={16} />
-          Produto
-        </div>
-        <div>
+      <div>
+        <CaretUp size={16} />
+        Produto
+      </div>
+      <section className="input-form product-selector">
+        <div className="search-row">
           <MagnifyingGlass size={20} />
           <input
-            className='search'
+            className="search"
             type="text"
-            name="product"
             value={productQuery}
-            onInput={onInput}
-            placeholder="Buscar produto por nome ou marca"
+            onChange={(event) => onProductQueryChange(event.currentTarget.value)}
+            placeholder="Pesquisar por nome ou marca"
+            aria-label="Pesquisar produto"
           />
-          <button type="button" className='filter-button'>
+          <button type="button" className="filter-button" disabled>
             <Plus size={16} />
             Filtro
           </button>
@@ -47,19 +59,42 @@ export default function PredictionForm({ formData, onInput, onSubmit, isLoading 
         {!hasMatches && normalizedQuery.length > 0 && (
           <p className="no-results">Nenhum produto encontrado para "{productQuery}".</p>
         )}
-        
-        <select
-          name="model_type"
-          value={formData.model_type}
-          onInput={onInput}
-        >
-          {selectOptions.map((opt) => (
-            <option key={opt.value} value={opt.value}>
-              {opt.label}
-            </option>
+        <div className="selected-models" aria-live="polite">
+          {selectedModels.length === 0 && (
+            <span className="selected-empty">Selecione um ou mais produtos.</span>
+          )}
+          {selectedModels.map((model) => (
+            <span key={model} className="selected-chip">
+              {MODEL_LABELS[model]}
+              <button
+                type="button"
+                onClick={() => onRemoveModel(model)}
+                aria-label={`Remover ${MODEL_LABELS[model]}`}
+              >
+                <X size={16} />
+              </button>
+            </span>
           ))}
-        </select>
-      </label>
+        </div>
+        <div className="model-options">
+          {displayOptions.map((opt) => {
+            const isSelected = selectedModels.includes(opt.value);
+            return (
+              <label
+                key={opt.value}
+                className={`model-option${isSelected ? ' selected' : ''}`}
+              >
+                <input
+                  type="checkbox"
+                  checked={isSelected}
+                  onChange={() => onToggleModel(opt.value)}
+                />
+                <span>{opt.label}</span>
+              </label>
+            );
+          })}
+        </div>
+      </section>
       <div className='input-div'>
         <label className='input-form'>
           Ano
@@ -68,7 +103,7 @@ export default function PredictionForm({ formData, onInput, onSubmit, isLoading 
             name="year"
             min={2000}
             value={formData.year}
-            onInput={onInput}
+            onInput={onFieldChange}
           />
         </label>
         <label className='input-form'>
@@ -79,7 +114,7 @@ export default function PredictionForm({ formData, onInput, onSubmit, isLoading 
             min={1}
             max={12}
             value={formData.month}
-            onInput={onInput}
+            onInput={onFieldChange}
           />
         </label>
       </div>
@@ -89,7 +124,7 @@ export default function PredictionForm({ formData, onInput, onSubmit, isLoading 
           <select
             name="campaign"
             value={formData.campaign ?? ''}
-            onInput={onInput}
+            onInput={onFieldChange}
           >
             <option value="">Automático (usar previsão)</option>
             <option value="1">Sim</option>
@@ -101,7 +136,7 @@ export default function PredictionForm({ formData, onInput, onSubmit, isLoading 
           <select
             name="seasonality"
             value={formData.seasonality ?? ''}
-            onInput={onInput}
+            onInput={onFieldChange}
           >
             <option value="">Automático (usar previsão)</option>
             <option value="1">Sim</option>

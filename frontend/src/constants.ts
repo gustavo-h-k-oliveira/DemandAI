@@ -13,7 +13,7 @@ export const MODEL_OPTIONS = Object.entries(MODEL_LABELS).map(([value, label]) =
 }));
 
 export const DEFAULT_PAYLOAD: PredictionPayload = {
-  model_type: 'rf_bombom',
+  model_types: ['rf_bombom'],
   year: new Date().getFullYear(),
   month: new Date().getMonth() + 1,
   campaign: null,
