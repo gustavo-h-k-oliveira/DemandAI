@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 from sklearn.ensemble import RandomForestRegressor
-from sklearn.model_selection import GridSearchCV
+from sklearn.model_selection import GridSearchCV, TimeSeriesSplit
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 import joblib
 import matplotlib.pyplot as plt
@@ -64,11 +64,15 @@ def main():
     print("Executando Grid Search para otimização dos hiperparâmetros...")
     print("Isso pode levar alguns minutos...")
     
-    # Grid search com validação cruzada
+    # TimeSeriesSplit para validação cruzada respeitando ordem temporal
+    # n_splits=5 cria 5 folds temporais onde cada fold usa dados anteriores para treino
+    tscv = TimeSeriesSplit(n_splits=5)
+    
+    # Grid search com validação cruzada temporal
     grid_search = GridSearchCV(
         estimator=rf_base,
         param_grid=param_grid,
-        cv=5,  # 5-fold cross validation
+        cv=tscv,  # TimeSeriesSplit para séries temporais
         scoring='neg_mean_squared_error',
         n_jobs=-1,  # Usar todos os cores disponíveis
         verbose=1
@@ -142,6 +146,7 @@ def main():
         'product': 'TOPBEL LEITE CONDENSADO 50UN',
         'training_period': '2021-2023',
         'test_period': '2024-2025',
+        'cross_validation': 'TimeSeriesSplit(n_splits=5)',
         'best_params': grid_search.best_params_,
         'features': feature_columns,
         'train_metrics': {
