@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { CaretLeft, SquaresFour, FileArrowUp, Files, Folder } from 'phosphor-react';
+import { CaretLeft, SquaresFour, FileArrowUp, Files, Folder, Moon, Sun, SignOut } from 'phosphor-react';
 import SidebarLink from './SidebarLink';
 import logo from '../static/zd-logo.png';
 
@@ -19,6 +19,9 @@ const LINKS: SidebarLinkItem[] = [
 
 export default function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
+  // Placeholder to control rendering of icon/label between dark/light
+  // Not implementing toggle functionality yet — this is static for now.
+  const isDarkMode = true;
 
   function handleToggle() {
     setCollapsed((prev) => !prev);
@@ -38,12 +41,23 @@ export default function Sidebar() {
         </button>
       </div>
       {!collapsed && (
-        <div className="menu">
-          <p>Menu</p>
-          {LINKS.map((link) => (
-            <SidebarLink key={link.label} {...link} />
-          ))}
-        </div>
+        <>
+          <div className="menu">
+            <p>Menu</p>
+            {LINKS.map((link) => (
+              <SidebarLink key={link.label} {...link} />
+            ))}
+          </div>
+          <div className='menu'>
+            <p>Geral</p>
+            <SidebarLink
+              label={isDarkMode ? 'Modo Claro' : 'Modo Escuro'}
+              href="/"
+              icon={isDarkMode ? <Sun size={20} color="#615D5B" /> : <Moon size={20} color="#615D5B" />}
+            />
+            <SidebarLink label="Sair" href="/" icon={<SignOut size={20} color="#615D5B" />} />
+          </div>
+        </>
       )}
     </nav>
   );

@@ -23,43 +23,33 @@ export default function ResultPanel({ result, error }: ResultPanelProps) {
 
       {!error && result && hasBatch && (
         <div className="batch-results">
-          {batch.map((entry) => {
-            const label = MODEL_LABELS[entry.model_type] ?? entry.model_type;
-            return (
-              <article key={entry.model_type} className="batch-card">
-                <dl>
-                  {entry.applied_flags && (
-                    <>
-                      <div>
-                        <h3>{label}</h3>
-                        <p className="prediction-value">{entry.prediction.toLocaleString('pt-BR')}</p>
-                      </div>
-                      <div>
-                        <dt>Campanha aplicada</dt>
-                        <dd>{entry.applied_flags.campaign ? 'Sim' : 'Não'}</dd>
-                      </div>
-                      <div>
-                        <dt>Sazonalidade prevista</dt>
-                        <dd>{entry.applied_flags.seasonality ? 'Sim' : 'Não'}</dd>
-                      </div>
-                    </>
-                  )}
-                  {entry.flag_source && (
-                    <div>
-                      <dt>Origem</dt>
-                      <dd>{flagSourceLabels[entry.flag_source] ?? entry.flag_source}</dd>
-                    </div>
-                  )}
-                  {entry.details && (
-                    <div>
-                      <dt>Detalhes</dt>
-                      <dd>{entry.details}</dd>
-                    </div>
-                  )}
-                </dl>
-              </article>
-            );
-          })}
+          <table className="batch-table">
+            <thead>
+              <tr>
+                <th style={{textAlign: 'left'}}>Produto</th>
+                <th style={{textAlign: 'left'}}>Previsão</th>
+                <th style={{textAlign: 'center'}}>Campanha</th>
+                <th style={{textAlign: 'center'}}>Sazonalidade</th>
+                <th style={{textAlign: 'center'}}>Origem</th>
+                <th style={{textAlign: 'left'}}>Detalhes</th>
+              </tr>
+            </thead>
+            <tbody>
+              {batch.map((entry, i) => {
+                const label = MODEL_LABELS[entry.model_type] ?? entry.model_type;
+                return (
+                  <tr key={`${entry.model_type}-${i}`} style={{borderTop: '1px solid rgba(0,0,0,0.06)'}}>
+                    <td>{label}</td>
+                    <td className="prediction-value">{entry.prediction.toLocaleString('pt-BR')}</td>
+                    <td style={{textAlign: 'center'}}>{entry.applied_flags ? (entry.applied_flags.campaign ? 'Sim' : 'Não') : '—'}</td>
+                    <td style={{textAlign: 'center'}}>{entry.applied_flags ? (entry.applied_flags.seasonality ? 'Sim' : 'Não') : '—'}</td>
+                    <td style={{textAlign: 'center'}}>{entry.flag_source ? flagSourceLabels[entry.flag_source] ?? entry.flag_source : '—'}</td>
+                    <td>{entry.details ?? '—'}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
       )}
 
